@@ -1,0 +1,268 @@
+/* ═════════════════════════════════════════════════════════════════════
+   SPB ALLIANCE HUB — Day/Night theme system
+   Scope: Member panel + Admin panel ONLY.
+
+   Architecture:
+   • The Night palette is the design-system default in global.css (:root).
+   • Day mode re-maps the SAME design tokens on <html data-theme="day">,
+     plus targeted overrides for the handful of surfaces that hard-code
+     dark colors. No component JS is affected.
+   • The Login page is intentionally untouched: it re-pins the night
+     tokens on .login-v2 below and paints its own canvas sky.
+   • Preference storage: spb-member-theme / spb-admin-theme (independent
+     per panel), mirrored to spb-theme for pre-paint restore.
+   ═════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme='night'] { color-scheme: dark; }
+
+/* ── 1. DAY TOKENS (same names as global.css — components need no changes) */
+:root[data-theme='day'] {
+  color-scheme: light;
+  /* Backgrounds — bright parchment-navy scale */
+  --bg-0: #e7eaf2;
+  --bg-1: #eff1f8;
+  --bg-2: #f7f9fd;
+  /* Surfaces */
+  --surface-0: #ffffff;
+  --surface-1: #fbfcfe;
+  --surface-2: #f1f4fa;
+  /* Gold — deepened for contrast on light backgrounds */
+  --gold: #b8891f;
+  --gold-bright: #96700f;
+  --gold-deep: #7d5c0d;
+  --gold-dim: rgba(150, 112, 15, 0.32);
+  --gold-faint: rgba(184, 137, 31, 0.10);
+  /* Text — dark navy ink */
+  --text-1: #1d2436;
+  --text-2: #46536b;
+  --text-3: #67748c;
+  /* Status — darkened for contrast on white */
+  --green: #257a52;
+  --red: #b04545;
+  --orange: #a86a1e;
+  --blue: #2f6db0;
+  --violet: #5a4ac0;
+  /* Shadows / glow / focus — soft, light-mode weight */
+  --shadow-1: 0 1px 4px rgba(29, 36, 54, 0.08);
+  --shadow-2: 0 6px 24px rgba(29, 36, 54, 0.12);
+  --shadow-3: 0 24px 60px -18px rgba(29, 36, 54, 0.24);
+  --glow-gold: 0 0 16px rgba(184, 137, 31, 0.12);
+  --ring: 0 0 0 4px rgba(184, 137, 31, 0.18);
+  --border: rgba(29, 36, 54, 0.14);
+}
+
+/* Day page sky (mirrors the night body gradient's structure so the base
+   color cross-fades; the atmospheric glows are subtle in both themes). */
+:root[data-theme='day'] body {
+  background-color: #e7eaf2;
+  background-image:
+    radial-gradient(1100px 480px at 80% -10%, rgba(184, 137, 31, 0.07), transparent 60%),
+    radial-gradient(900px 520px at 106% 6%, rgba(90, 74, 192, 0.06), transparent 55%),
+    radial-gradient(720px 440px at -10% 104%, rgba(184, 137, 31, 0.05), transparent 60%),
+    linear-gradient(180deg, #f2f4fa 0%, #e7eaf2 42%);
+}
+
+:root[data-theme='day'] ::selection { background: rgba(184, 137, 31, 0.28); color: #241c05; }
+
+/* ── 2. DAY SURFACES (elements that hard-code dark colors in the base CSS) */
+
+/* Header / navigation / footer */
+:root[data-theme='day'] .site-header { background: rgba(250, 251, 254, 0.86); }
+:root[data-theme='day'] .main-nav a { background: rgba(29, 36, 54, 0.04); border-color: rgba(29, 36, 54, 0.08); }
+:root[data-theme='day'] .main-nav a:hover { background: rgba(29, 36, 54, 0.09); border-color: rgba(29, 36, 54, 0.22); }
+:root[data-theme='day'] .main-nav a.active { background: linear-gradient(160deg, rgba(184, 137, 31, 0.16), rgba(184, 137, 31, 0.06)); }
+:root[data-theme='day'] .clock-toggle { background: rgba(29, 36, 54, 0.05); border-color: rgba(29, 36, 54, 0.12); }
+:root[data-theme='day'] .social-btn { background: rgba(29, 36, 54, 0.05); }
+:root[data-theme='day'] .nav-toggle { border-color: rgba(29, 36, 54, 0.25); }
+:root[data-theme='day'] .mobile-drawer { background: rgba(251, 252, 254, 0.98); }
+:root[data-theme='day'] .site-footer { background: rgba(236, 238, 245, 0.85); }
+:root[data-theme='day'] .footer-mail { background: rgba(29, 36, 54, 0.04); }
+
+/* Cards / sections */
+:root[data-theme='day'] .card {
+  background: linear-gradient(165deg, #fbfcfe 0%, #f2f5fb 100%);
+  border-color: rgba(29, 36, 54, 0.12);
+  box-shadow: 0 1px 3px rgba(29, 36, 54, 0.06), 0 10px 30px -18px rgba(29, 36, 54, 0.20);
+}
+:root[data-theme='day'] .card-hover:hover {
+  border-color: rgba(184, 137, 31, 0.38);
+  box-shadow: 0 18px 44px -18px rgba(29, 36, 54, 0.25), 0 0 24px rgba(184, 137, 31, 0.08);
+}
+:root[data-theme='day'] .state-box {
+  background: linear-gradient(170deg, rgba(247, 249, 252, 0.92), rgba(238, 241, 248, 0.85));
+  border-color: rgba(29, 36, 54, 0.22);
+}
+
+/* Buttons */
+:root[data-theme='day'] .btn-ghost { background: rgba(29, 36, 54, 0.05); border-color: rgba(29, 36, 54, 0.18); }
+:root[data-theme='day'] .btn-ghost:hover:not(:disabled) { color: var(--text-1); border-color: rgba(29, 36, 54, 0.32); background: rgba(29, 36, 54, 0.09); }
+:root[data-theme='day'] .btn-danger { color: #933636; }
+:root[data-theme='day'] .btn-outline, :root[data-theme='day'] .btn-gold { color: #241c05; }
+:root[data-theme='day'] .btn-outline:hover:not(:disabled) { box-shadow: 0 5px 16px rgba(29, 36, 54, 0.14); }
+:root[data-theme='day'] .btn-gold:hover:not(:disabled) { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), 0 7px 20px rgba(29, 36, 54, 0.25), 0 0 22px rgba(184, 137, 31, 0.22); }
+
+/* Forms — inputs get a distinct (non-blinding) background, a clearly
+   visible border, and EXPLICIT near-black text so typed content is always
+   readable in day mode (no reliance on inherited variable resolution). */
+:root[data-theme='day'] .input,
+:root[data-theme='day'] .select,
+:root[data-theme='day'] .textarea {
+  background: #f7f9fd;
+  border-color: rgba(29, 36, 54, 0.28);
+  color: #141a29;
+  caret-color: #141a29;
+}
+:root[data-theme='day'] .input:hover:not(:disabled),
+:root[data-theme='day'] .select:hover:not(:disabled),
+:root[data-theme='day'] .textarea:hover:not(:disabled) { border-color: rgba(29, 36, 54, 0.42); }
+:root[data-theme='day'] .input:focus,
+:root[data-theme='day'] .select:focus,
+:root[data-theme='day'] .textarea:focus { background: #ffffff; color: #141a29; }
+:root[data-theme='day'] .input::placeholder,
+:root[data-theme='day'] .textarea::placeholder { color: #5f6d88; }
+:root[data-theme='day'] .input:disabled,
+:root[data-theme='day'] .select:disabled,
+:root[data-theme='day'] .textarea:disabled { color: #55617a; }
+
+/* Tables */
+:root[data-theme='day'] .table-wrap {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 246, 251, 0.94));
+  border-color: rgba(29, 36, 54, 0.10);
+  box-shadow: 0 10px 30px -20px rgba(29, 36, 54, 0.2);
+}
+:root[data-theme='day'] .table th { background: #edf0f7; }
+:root[data-theme='day'] .table td { border-color: rgba(29, 36, 54, 0.07); }
+:root[data-theme='day'] .table tbody tr:hover { background: rgba(184, 137, 31, 0.06); }
+
+/* Modals / toasts */
+:root[data-theme='day'] .modal-backdrop { background: rgba(30, 38, 60, 0.45); }
+:root[data-theme='day'] .modal { border-color: rgba(184, 137, 31, 0.3); }
+:root[data-theme='day'] .toast {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.98), rgba(244, 246, 251, 0.98));
+  border-color: rgba(29, 36, 54, 0.14);
+  box-shadow: 0 6px 22px rgba(29, 36, 54, 0.16);
+}
+
+/* Badges & pills — light-on-dark text becomes dark-on-light */
+:root[data-theme='day'] .badge-violet { color: #5546a8; background: rgba(85, 70, 168, 0.10); border-color: rgba(85, 70, 168, 0.35); }
+:root[data-theme='day'] .cat-pill.red { color: #a84343; }
+:root[data-theme='day'] .cat-pill.orange { color: #7a4a1e; }
+:root[data-theme='day'] .cat-pill.gold { color: #8c6d18; }
+:root[data-theme='day'] .cat-pill.blue { color: #1e4a7a; }
+:root[data-theme='day'] .cat-pill.violet { color: #5546a8; }
+:root[data-theme='day'] .cat-pill.green { color: #1f5c3a; }
+:root[data-theme='day'] .cat-pill.brown { color: #7a4a28; }
+:root[data-theme='day'] .cat-pill.gray { color: #5a6478; }
+
+/* ── 3. MEMBER PAGES (calendar / gift codes) */
+:root[data-theme='day'] .icon-input .input { background: #f7f9fd; color: #141a29; }
+:root[data-theme='day'] .cal-cell { background: rgba(29, 36, 54, 0.04); border-color: rgba(29, 36, 54, 0.09); }
+/* Gift codes — day readability: dark-on-light code pill, stronger desc/date contrast */
+:root[data-theme='day'] .gc-code {
+  background: #ffffff;
+  border-color: rgba(184, 137, 31, 0.32);
+  color: #7d5c0d;
+  text-shadow: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 1px 4px rgba(29,36,54,0.08);
+}
+:root[data-theme='day'] .gc-desc { color: #3f4a5e; }
+:root[data-theme='day'] .gc-date { color: #46536b; }
+:root[data-theme='day'] .gc-date svg { color: #5f6d88; }
+:root[data-theme='day'] .gc-verified { color: #46536b; }
+:root[data-theme='day'] .gift-widget { background: linear-gradient(165deg, #ffffff 0%, #f2f5fb 100%); border-color: rgba(184,137,31,0.22); }
+:root[data-theme='day'] .table td.mono { color: #7d5c0d !important; }
+:root[data-theme='day'] .gift-input::placeholder { color: #5f6d88; }
+
+/* ── 4. ADMIN PANEL */
+:root[data-theme='day'] .admin-nav { background: rgba(250, 251, 253, 0.95); }
+:root[data-theme='day'] .admin-nav a:hover { background: rgba(29, 36, 54, 0.07); }
+:root[data-theme='day'] .admin-nav a.active { background: linear-gradient(160deg, rgba(184, 137, 31, 0.16), rgba(184, 137, 31, 0.06)); }
+:root[data-theme='day'] .admin-nav-logout { color: var(--red); }
+:root[data-theme='day'] .logo-preview { background: rgba(29, 36, 54, 0.04); }
+:root[data-theme='day'] .media-item img { background: #dde2ec; }
+:root[data-theme='day'] .lb-rank-2 { color: #4a5568; border-color: rgba(74, 85, 104, 0.4); }
+:root[data-theme='day'] .lb-rank-3 { color: #a3611a; border-color: rgba(163, 97, 26, 0.4); }
+
+/* ── 5. SMOOTH THEME TRANSITION (200–400ms, CSS only) */
+/* Permanent cross-fade on the main surfaces that don't already declare
+    their own transitions (components with hover transitions keep theirs —
+    their background/color stops already animate). */
+body,
+.site-header, .site-footer, .card, .modal, .modal-backdrop, .toast,
+.table-wrap, .table th, .table td, .state-box, .section-title,
+.cat-pill, .badge, .theme-toggle,
+.admin-nav, .gc-code, .gc-desc, .gc-date, .gift-widget,
+.cal-cell, .clock-toggle {
+  transition: background-color 0.28s ease, background 0.28s ease,
+    border-color 0.28s ease, color 0.28s ease, box-shadow 0.28s ease;
+}
+/* One-off sweep while <html class="theme-transition"> is set (added by
+   useTheme on toggle) so every element — borders, text, shadows — moves
+   together in a single smooth step. */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 0.3s ease, background 0.3s ease,
+    border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease,
+    fill 0.3s ease, stroke 0.3s ease !important;
+}
+/* (The global prefers-reduced-motion rule in global.css already reduces
+   these durations to 0.01ms for users with reduced motion enabled.) */
+
+/* ── 6. THEME TOGGLE BUTTON (member + admin headers) */
+.theme-toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 13px; border-radius: 999px; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--text-2); white-space: nowrap;
+  background: rgba(148, 163, 184, 0.07);
+  border: 1px solid rgba(168, 179, 194, 0.16);
+}
+.theme-toggle:hover { color: var(--text-1); border-color: var(--gold-dim); background: var(--gold-faint); }
+.theme-toggle:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
+.theme-toggle .tt-icon { font-size: 14px; line-height: 1; }
+:root[data-theme='day'] .theme-toggle { background: rgba(29, 36, 54, 0.05); border-color: rgba(29, 36, 54, 0.14); }
+:root[data-theme='day'] .theme-toggle:hover { background: rgba(184, 137, 31, 0.1); border-color: var(--gold-dim); color: var(--text-1); }
+/* Icon-only on small screens so the header never crowds. */
+@media (max-width: 700px) {
+  .theme-toggle { padding: 7px 10px; }
+  .theme-toggle .tt-label { display: none; }
+}
+
+/* ── 7. LOGIN PAGE ISOLATION (always night, never themed) ──
+   The login page (and the maintenance notice, which reuses .login-v2)
+   sits outside the themed panels and keeps its own animated canvas sky.
+   Re-pin the full night token set so a global day theme can never leak
+   dark-on-light (or light-on-dark) values into it. */
+.login-v2 {
+  --bg-0: #070b14;
+  --bg-1: #0a101d;
+  --bg-2: #0e1526;
+  --surface-0: #121627;
+  --surface-1: #161d31;
+  --surface-2: #1d2540;
+  --gold: #d4af37;
+  --gold-bright: #f4d76a;
+  --gold-deep: #b8942e;
+  --gold-dim: rgba(212, 175, 55, 0.28);
+  --gold-faint: rgba(212, 175, 55, 0.12);
+  --text-1: #f5f7fa;
+  --text-2: #a9b4c4;
+  --text-3: #71809a;
+  --green: #4caf7d;
+  --red: #d06a6a;
+  --orange: #d99a4e;
+  --blue: #5b9bd5;
+  --violet: #6d5bd0;
+  --shadow-1: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 10px 34px rgba(0, 0, 0, 0.55);
+  --shadow-3: 0 28px 64px -18px rgba(0, 0, 0, 0.7);
+  --glow-gold: 0 0 18px rgba(212, 175, 55, 0.18);
+  --ring: 0 0 0 4px rgba(212, 175, 55, 0.15);
+  --border: rgba(168, 179, 194, 0.18);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-display: Georgia, 'Palatino Linotype', 'Times New Roman', serif;
+  --font-body: 'Segoe UI Variable Text', 'Inter', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  color-scheme: dark;
+}
