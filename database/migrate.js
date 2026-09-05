@@ -10,7 +10,7 @@
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const { Client } = require('pg');
+const { Client } = require('../backend/node_modules/pg');
 const env = require('../backend/src/config/env');
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
