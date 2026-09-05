@@ -9,7 +9,7 @@
     "dev:server": "node backend/server.js",
     "dev:web": "vite frontend",
     "dev": "concurrently -n API,WEB -c yellow,cyan \"npm:dev:server\" \"npm:dev:web\"",
-    "build": "vite build frontend",
+    "build": "vite build",
     "start": "npm run build && cross-env NODE_ENV=production node backend/server.js",
     "migrate": "node database/migrate.js"
   },
