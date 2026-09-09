@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { useAsync } from '../hooks/useAsync.js';
 import { useToast } from './Toast.jsx';
 import api from '../services/api.js';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrender.com';
+
+function mediaUrl(url) {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_BASE}${url}`;
+}
 import { Button, Modal, LoadingBox, ErrorState, EmptyState } from '../components/ui.jsx';
 import { IconImage, IconPlus } from './icons.jsx';
 
@@ -13,7 +20,7 @@ export default function MediaPicker({ onPick, initial = '', label = 'Choose imag
   return (
     <>
       <div className="logo-preview" style={{ marginBottom: 6 }}>
-        {initial ? <img src={initial} alt="Current image" /> : <span className="logo-default skeleton" aria-hidden="true" />}
+        {initial ? <img src={mediaUrl(initial)} alt="Current image" /> : <span className="logo-default skeleton" aria-hidden="true" />}
         <div style={{ flex: 1 }}>
           <Button type="button" variant="outline" size="sm" icon={<IconImage />} onClick={() => setOpen(true)}>
             {initial ? 'Change image' : label}
@@ -98,7 +105,7 @@ function MediaPickerModal({ initial, onClose, onPick }) {
           <div className="media-grid">
             {data.map((m) => (
               <div className="media-item" key={m.id} style={m.url === initial ? { borderColor: 'var(--gold)' } : undefined}>
-                <img src={m.url} alt={m.filename} loading="lazy" />
+               <img src={mediaUrl(m.url)} alt={m.filename} loading="lazy" />
                 <div className="media-item-info">
                   <span className="mono" style={{ fontSize: 11 }}>{m.width}×{m.height} · {Math.max(1, Math.round(m.size / 1024))} KB</span>
                   <div className="media-item-actions">
