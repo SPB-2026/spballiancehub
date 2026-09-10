@@ -97,13 +97,17 @@ export default function RichTextEditor({ value = '', onChange }) {
 async function handlePaste(e) {
   const clipboard = e.clipboardData;
 
-  if (!clipboard?.items) return;
+  if (!clipboard) return;
 
-  for (const item of clipboard.items) {
-    if (!item.type.startsWith('image/')) continue;
+  // Handle screenshots/images copied to the clipboard.
+  const imageItem = Array.from(clipboard.items || []).find(
+    (item) => item.type.startsWith('image/')
+  );
 
-    const file = item.getAsFile();
-    if (!file) continue;
+  if (imageItem) {
+    const file = imageItem.getAsFile();
+
+    if (!file) return;
 
     e.preventDefault();
 
@@ -114,6 +118,14 @@ async function handlePaste(e) {
       console.error('Screenshot upload failed:', err);
       window.alert(`Screenshot upload failed: ${err.message}`);
     }
+
+    return;
+  }
+
+  // Allow normal text paste.
+  // The browser handles the actual insertion.
+  setTimeout(update, 0);
+}
 
     return;
   }
