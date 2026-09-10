@@ -9,6 +9,13 @@ import {
   IconUsers, IconTrophy, IconCalendar, IconGift, IconBook,
   IconCrown,
 } from '../components/icons.jsx';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrender.com';
+
+function mediaUrl(url) {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_BASE}${url}`;
+}
 
 const CATEGORY_LABELS = {
   general: 'General Tips',
@@ -100,7 +107,7 @@ export default function Home() {
 
         {settings?.home_banner ? (
           <Link to="/members" className="alliance-card" style={{ display: 'block' }}>
-            <img src={settings.home_banner} alt="Alliance banner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+            <img src={mediaUrl(settings.home_banner)} alt="Alliance banner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
           </Link>
         ) : (
           <div className="alliance-card">
