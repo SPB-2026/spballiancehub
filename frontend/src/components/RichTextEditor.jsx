@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import MediaPicker from './MediaPicker.jsx';
+import api from '../services/api.js';
 
 const BLOCK_TAGS = ['P', 'H2', 'H3', 'LI', 'DIV'];
 
@@ -93,29 +94,30 @@ export default function RichTextEditor({ value = '', onChange }) {
     update();
   }
 
-  function handlePaste(e) {
-    const clipboard = e.clipboardData;
+async function handlePaste(e) {
+  const clipboard = e.clipboardData;
 
-    if (!clipboard?.items) return;
+  if (!clipboard?.items) return;
 
-    for (const item of clipboard.items) {
-      if (!item.type.startsWith('image/')) continue;
+  for (const item of clipboard.items) {
+    if (!item.type.startsWith('image/')) continue;
 
-      const file = item.getAsFile();
-      if (!file) continue;
+    const file = item.getAsFile();
+    if (!file) continue;
 
-      e.preventDefault();
+    e.preventDefault();
 
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        addImage(reader.result);
-      };
-
-      reader.readAsDataURL(file);
-      return;
+    try {
+      const uploaded = await api.upload('/admin/media', file, 'image');
+      addImage(uploaded.url);
+    } catch (err) {
+      console.error('Screenshot upload failed:', err);
+      window.alert(`Screenshot upload failed: ${err.message}`);
     }
+
+    return;
   }
+}
 
   function handleKeyDown(e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
