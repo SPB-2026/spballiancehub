@@ -40,9 +40,10 @@ export default function TipArticle() {
             {asTagArray(a.tags).map((t) => <span className="tip-tag" key={t}>#{t}</span>)}
           </div>
         ) : null}
-        <div className="article-body">
-          {a.body.split(/\n\n+/).map((p, i) => <p key={i}>{p}</p>)}
-        </div>
+        <div
+  className="article-body"
+  dangerouslySetInnerHTML={{ __html: a.body }}
+/>
       </div>
     </div>
   );
