@@ -4,6 +4,7 @@ import { useToast } from '../components/Toast.jsx';
 import api from '../services/api.js';
 import AdminTable from './AdminTable.jsx';
 import MediaPicker from '../components/MediaPicker.jsx';
+import RichTextEditor from '../components/RichTextEditor.jsx';
 import { Button, Badge, Modal, Field, ConfirmDialog } from '../components/ui.jsx';
 import { fmtDate, asTagArray, tagsToCsv } from '../utils/format.js';
 import { IconPlus, IconEdit, IconTrash, IconCheck } from '../components/icons.jsx';
@@ -169,9 +170,18 @@ export default function AdminTips() {
             <Field label="Cover image" id="t-cover" hint="Shown on the tip card in the Tips & Tricks section.">
               <MediaPicker initial={form.cover} onPick={(url) => setForm({ ...form, cover: url })} label="Choose cover" />
             </Field>
-            <Field label="Content" id="t-body" hint="Separate paragraphs with a blank line.">
-              <textarea id="t-body" className="textarea" style={{ minHeight: 220 }} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} required />
-            </Field>
+            
+<Field
+  label="Content"
+  id="t-body"
+  hint="Write your guide, format it, and insert screenshots wherever you need them."
+>
+  <RichTextEditor
+    value={form.body}
+    onChange={(body) => setForm({ ...form, body })}
+  />
+</Field>
+            
             <label className="checkbox-row">
               <input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} />
               Published (visible to members immediately)
