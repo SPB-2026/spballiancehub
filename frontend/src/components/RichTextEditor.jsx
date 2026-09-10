@@ -1,7 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import MediaPicker from './MediaPicker.jsx';
 import api from '../services/api.js';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrender.com';
 
+function mediaUrl(url) {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_BASE}${url}`;
+}
 const BLOCK_TAGS = ['P', 'H2', 'H3', 'LI', 'DIV'];
 
 function exec(command, value = null) {
@@ -65,7 +71,7 @@ export default function RichTextEditor({ value = '', onChange }) {
     focusEditor();
 
     const img = document.createElement('img');
-    img.src = url;
+    img.src = mediaUrl(url);
     img.alt = '';
     img.style.maxWidth = '100%';
     img.style.height = 'auto';
