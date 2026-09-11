@@ -11,7 +11,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrende
 function mediaUrl(url) {
   if (!url) return '';
   if (/^https?:\/\//i.test(url)) return url;
-  return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+  return `${API_BASE}${url}`;
 }
 
 export default function AdminMedia() {
@@ -28,7 +28,7 @@ export default function AdminMedia() {
     setUploading(true);
     try {
       const item = await api.upload('/admin/media', file, 'image');
-      toast.success('Image uploaded', `${item.width || 0}×${item.height || 0}px · ${Math.max(1, Math.round((item.size || 0) / 1024))} KB`);
+      toast.success('Image uploaded', `${item.width}×${item.height}px · ${Math.max(1, Math.round(item.size / 1024))} KB`);
       reload();
     } catch (err) {
       toast.error('Upload failed', err.message);
@@ -37,8 +37,8 @@ export default function AdminMedia() {
     }
   }
 
-  async function copyUrl(rawUrl) {
-    const fullUrl = mediaUrl(rawUrl);
+  async function copyUrl(url) {
+    const fullUrl = mediaUrl(url);
     try {
       await navigator.clipboard.writeText(fullUrl);
       toast.info('URL copied', fullUrl);
@@ -83,40 +83,19 @@ export default function AdminMedia() {
           <EmptyState icon="🖼️" title="No media yet" emptyText="Upload the first image (JPG, PNG or WebP, max 2 MB) to build the library." />
         ) : (
           <div className="media-grid">
-            {data.map((m) => {
-              const srcUrl = mediaUrl(m.url || m.path);
-              return (
-                <div className="media-item" key={m.id}>
-                  <div style={{ width: '100%', height: '140px', overflow: 'hidden', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img 
-                      src={srcUrl} 
-                      alt={m.filename || 'Media image'} 
-                      loading="lazy" 
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.style.display = 'none';
-                        e.target.parentNode.innerText = '⚠️ Image load error';
-                        e.target.parentNode.style.color = '#ff6b6b';
-                        e.target.parentNode.style.fontSize = '12px';
-                      }}
-                    />
-                  </div>
-                  <div className="media-item-info">
-                    <span className="mono" style={{ fontSize: 11 }}>
-                      {m.width ? `${m.width}×${m.height}` : 'Image'} · {Math.max(1, Math.round((m.size || 0) / 1024))} KB
-                    </span>
-                    <span className="text-dim" style={{ fontSize: 11 }}>
-                      {m.uploaded_by ? `by ${m.uploaded_by} · ` : ''}{fmtDateTime(m.created_at)}
-                    </span>
-                    <div className="media-item-actions">
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => copyUrl(m.url || m.path)}>Copy URL</button>
-                      <button type="button" className="btn btn-danger btn-sm" onClick={() => setConfirm(m)} title="Delete image"><IconTrash size={13} /> Delete</button>
-                    </div>
+            {data.map((m) => (
+              <div className="media-item" key={m.id}>
+                <img src={mediaUrl(m.url)} alt={m.filename} loading="lazy" />
+                <div className="media-item-info">
+                  <span className="mono" style={{ fontSize: 11 }}>{m.width}×{m.height} · {Math.max(1, Math.round(m.size / 1024))} KB</span>
+                  <span className="text-dim" style={{ fontSize: 11 }}>{m.uploaded_by ? `by ${m.uploaded_by} · ` : ''}{fmtDateTime(m.created_at)}</span>
+                  <div className="media-item-actions">
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => copyUrl(m.url)}>Copy URL</button>
+                    <button type="button" className="btn btn-danger btn-sm" onClick={() => setConfirm(m)} title="Delete image"><IconTrash size={13} /> Delete</button>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
 
