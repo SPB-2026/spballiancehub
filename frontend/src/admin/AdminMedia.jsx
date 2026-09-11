@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useAsync } from '../hooks/useAsync.js';
-import { useToast } from '../components/Toast.jsx';
+import { useToast } from './Toast.jsx';
 import api from '../services/api.js';
-import { LoadingBox, ErrorState, EmptyState, Button, ConfirmDialog } from '../components/ui.jsx';
+import { LoadingBox, ErrorState, EmptyState, Button, ConfirmDialog } from './ui.jsx';
 import { fmtDateTime } from '../utils/format.js';
-import { IconPlus, IconTrash } from '../components/icons.jsx';
+import { IconPlus, IconTrash } from './icons.jsx';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrender.com';
 
@@ -38,9 +38,10 @@ export default function AdminMedia() {
   }
 
   async function copyUrl(url) {
+    const fullUrl = mediaUrl(url);
     try {
-      await navigator.clipboard.writeText(url);
-      toast.info('URL copied', url);
+      await navigator.clipboard.writeText(fullUrl);
+      toast.info('URL copied', fullUrl);
     } catch {
       toast.error('Copy failed', 'Select the URL manually.');
     }
@@ -68,7 +69,7 @@ export default function AdminMedia() {
           <h1>Media <span className="text-gold">Library</span></h1>
           <p>Upload images once and reuse them across news covers, event images, tips, the Home banner, favicon and logo.</p>
         </div>
-        <label style={{ display: 'inline-flex' }}>
+        <label style={{ display: 'inline-flex', cursor: uploading ? 'not-allowed' : 'pointer' }}>
           <span className="btn btn-gold" style={{ opacity: uploading ? 0.6 : 1 }} aria-hidden="true">
             {uploading ? 'Uploading…' : <><IconPlus /> Upload image</>}
           </span>
