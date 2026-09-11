@@ -1,18 +1,10 @@
 import React, { useState } from 'react';
 import { useAsync } from '../hooks/useAsync.js';
-import { useToast } from './Toast.jsx';
+import { useToast } from '../components/Toast.jsx';
 import api from '../services/api.js';
-import { LoadingBox, ErrorState, EmptyState, Button, ConfirmDialog } from './ui.jsx';
+import { LoadingBox, ErrorState, EmptyState, Button, ConfirmDialog } from '../components/ui.jsx';
 import { fmtDateTime } from '../utils/format.js';
-import { IconPlus, IconTrash } from './icons.jsx';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrender.com';
-
-function mediaUrl(url) {
-  if (!url) return '';
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${API_BASE}${url}`;
-}
+import { IconPlus, IconTrash } from '../components/icons.jsx';
 
 export default function AdminMedia() {
   const toast = useToast();
@@ -38,10 +30,9 @@ export default function AdminMedia() {
   }
 
   async function copyUrl(url) {
-    const fullUrl = mediaUrl(url);
     try {
-      await navigator.clipboard.writeText(fullUrl);
-      toast.info('URL copied', fullUrl);
+      await navigator.clipboard.writeText(url);
+      toast.info('URL copied', url);
     } catch {
       toast.error('Copy failed', 'Select the URL manually.');
     }
@@ -69,7 +60,7 @@ export default function AdminMedia() {
           <h1>Media <span className="text-gold">Library</span></h1>
           <p>Upload images once and reuse them across news covers, event images, tips, the Home banner, favicon and logo.</p>
         </div>
-        <label style={{ display: 'inline-flex', cursor: uploading ? 'not-allowed' : 'pointer' }}>
+        <label style={{ display: 'inline-flex' }}>
           <span className="btn btn-gold" style={{ opacity: uploading ? 0.6 : 1 }} aria-hidden="true">
             {uploading ? 'Uploading…' : <><IconPlus /> Upload image</>}
           </span>
@@ -85,7 +76,7 @@ export default function AdminMedia() {
           <div className="media-grid">
             {data.map((m) => (
               <div className="media-item" key={m.id}>
-                <img src={mediaUrl(m.url)} alt={m.filename} loading="lazy" />
+                <img src={m.url} alt={m.filename} loading="lazy" />
                 <div className="media-item-info">
                   <span className="mono" style={{ fontSize: 11 }}>{m.width}×{m.height} · {Math.max(1, Math.round(m.size / 1024))} KB</span>
                   <span className="text-dim" style={{ fontSize: 11 }}>{m.uploaded_by ? `by ${m.uploaded_by} · ` : ''}{fmtDateTime(m.created_at)}</span>
