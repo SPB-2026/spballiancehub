@@ -15,6 +15,17 @@ const DEFAULTS = {
   home_secondary_link: '/calendar',
 };
 
+// Add this helper function at the top of AdminHome.jsx
+const getImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  // If using an environment variable or backend URL, replace 'https://your-backend-api.com' below:
+  const backendBase = import.meta.env.VITE_API_URL || 'https://spballiancehub.vercel.app';
+  return `${backendBase}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export default function AdminHome() {
   const { settings, refresh } = useAuth();
   const toast = useToast();
@@ -110,8 +121,8 @@ export default function AdminHome() {
             </div>
             <div style={{ marginTop: 16, borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(168,179,194,0.15)' }}>
               {form.home_banner
-                ? <img src={form.home_banner} alt="Banner preview" style={{ width: '100%', maxHeight: 130, objectFit: 'cover', display: 'block' }} />
-                : <div style={{ padding: '26px 12px', textAlign: 'center', fontSize: 30 }} aria-hidden="true">🏰</div>}
+  ? <img src={getImageUrl(form.home_banner)} alt="Banner preview" style={{ width: '100%', maxHeight: 130, objectFit: 'cover', display: 'block' }} />
+  : <div style={{ padding: '26px 12px', textAlign: 'center', fontSize: 30 }} aria-hidden="true">🏰</div>}
             </div>
           </div>
         </div>
