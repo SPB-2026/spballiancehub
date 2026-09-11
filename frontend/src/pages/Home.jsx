@@ -107,7 +107,7 @@ export default function Home() {
 
         {settings?.home_banner ? (
           <Link to="/members" className="alliance-card" style={{ display: 'block' }}>
-            <img src="/images/Screenshot_20260908_184945_Kingshot[1].jpg" alt="Alliance banner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+            <img src="https://github.com/SPB-2026/spballiancehub/tree/main/frontend/public/images/Screenshot_20260908_184945_Kingshot[1].jpg" alt="Alliance banner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
           </Link>
         ) : (
           <div className="alliance-card">
