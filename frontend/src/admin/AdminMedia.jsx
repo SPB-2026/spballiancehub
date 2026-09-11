@@ -6,6 +6,14 @@ import { LoadingBox, ErrorState, EmptyState, Button, ConfirmDialog } from '../co
 import { fmtDateTime } from '../utils/format.js';
 import { IconPlus, IconTrash } from '../components/icons.jsx';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrender.com';
+
+function mediaUrl(url) {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
 export default function AdminMedia() {
   const toast = useToast();
   const { data, loading, error, reload } = useAsync(() => api.get('/admin/media'), []);
@@ -30,9 +38,10 @@ export default function AdminMedia() {
   }
 
   async function copyUrl(url) {
+    const fullUrl = mediaUrl(url);
     try {
-      await navigator.clipboard.writeText(url);
-      toast.info('URL copied', url);
+      await navigator.clipboard.writeText(fullUrl);
+      toast.info('URL copied', fullUrl);
     } catch {
       toast.error('Copy failed', 'Select the URL manually.');
     }
@@ -76,7 +85,7 @@ export default function AdminMedia() {
           <div className="media-grid">
             {data.map((m) => (
               <div className="media-item" key={m.id}>
-                <img src={m.url} alt={m.filename} loading="lazy" />
+                <img src={mediaUrl(m.url)} alt={m.filename} loading="lazy" />
                 <div className="media-item-info">
                   <span className="mono" style={{ fontSize: 11 }}>{m.width}×{m.height} · {Math.max(1, Math.round(m.size / 1024))} KB</span>
                   <span className="text-dim" style={{ fontSize: 11 }}>{m.uploaded_by ? `by ${m.uploaded_by} · ` : ''}{fmtDateTime(m.created_at)}</span>
