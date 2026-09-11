@@ -9,39 +9,6 @@ import {
   IconUsers, IconTrophy, IconCalendar, IconGift, IconBook,
   IconCrown,
 } from '../components/icons.jsx';
-const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrender.com';
-
-function mediaUrl(url) {
-  if (!url) return '';
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${API_BASE}${url}`;
-}
-
-const CATEGORY_LABELS = {
-  general: 'General Tips',
-  heroes: 'Heroes & Troops',
-  city: 'City Development',
-  resources: 'Resources',
-  combat: 'Combat & PvP',
-  alliance: 'Alliance Strategy',
-  events: 'Events',
-  formations: 'Formations & Marches',
-  equipment: 'Equipment & Upgrades',
-  f2p: 'F2P & Spending',
-};
-
-const CATEGORY_COLORS = {
-  general: 'red',
-  heroes: 'orange',
-  city: 'gold',
-  resources: 'blue',
-  combat: 'violet',
-  alliance: 'green',
-  events: 'orange',
-  formations: 'blue',
-  equipment: 'brown',
-  f2p: 'gray',
-};
 
 const DEFAULT_HERO = {
   title: 'Welcome to',
@@ -84,6 +51,13 @@ export default function Home() {
     secondaryLink: settings?.home_secondary_link || DEFAULT_HERO.secondaryLink,
   };
 
+  // Resolves the image path correctly from the frontend/public/ folder
+  const bannerSrc = settings?.home_banner 
+    ? (settings.home_banner.startsWith('http') || settings.home_banner.startsWith('/') 
+        ? settings.home_banner 
+        : `/images/${settings.home_banner}`)
+    : '/images/Screenshot_20260908_184945_Kingshot[1].jpg';
+
   return (
     <div className="page">
       {/* HERO — fully editable from the admin Home Page panel */}
@@ -105,20 +79,16 @@ export default function Home() {
           ) : null}
         </div>
 
-        {settings?.home_banner ? (
-          <Link to="/members" className="alliance-card" style={{ display: 'block' }}>
-            <img src="https://github.com/SPB-2026/spballiancehub/tree/main/frontend/public/images/Screenshot_20260908_184945_Kingshot[1].jpg" alt="Alliance banner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
-          </Link>
-        ) : (
-          <div className="alliance-card">
-            <div className="ac-castle" aria-hidden="true">🏰</div>
-            <div className="ac-label">Kingshot Alliance</div>
-            <Link to="/leaderboard" className="ac-btn">🏰 Kingshot Alliance</Link>
-          </div>
-        )}
+        <Link to="/members" className="alliance-card" style={{ display: 'block' }}>
+          <img 
+            src={bannerSrc} 
+            alt="Alliance banner" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} 
+          />
+        </Link>
       </section>
 
-      {/* ANNOUNCEMENTS — admin-managed, prioritized, with expiration */}
+      {/* ANNOUNCEMENTS */}
       {announcements.length > 0 ? (
         <section className="section" aria-label="Announcements">
           <div className="section-head">
@@ -189,8 +159,8 @@ export default function Home() {
           <div className="grid grid-3">
             {latestTips.map((a) => (
               <Link to={`/tips/${a.id}`} key={a.id} className="card tip-card card-hover" style={{ color: 'inherit' }}>
-                <span className={`cat-pill${CATEGORY_COLORS[a.category] ? ` ${CATEGORY_COLORS[a.category]}` : ''}`}>
-                  {CATEGORY_LABELS[a.category] || a.category}
+                <span className="cat-pill">
+                  {a.category}
                 </span>
                 <h3>{a.title}</h3>
                 <p>{a.body.split(/\n\n+/)[0]}</p>
