@@ -56,7 +56,7 @@ export default function Home() {
     ? (settings.home_banner.startsWith('http') || settings.home_banner.startsWith('/') 
         ? settings.home_banner 
         : `/images/${settings.home_banner}`)
-    : '/images/Screenshot_20260908_184945_Kingshot[1].jpg';
+    : '/images/alliance-banner.jpg';
 
   return (
     <div className="page">
