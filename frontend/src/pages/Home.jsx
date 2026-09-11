@@ -79,12 +79,13 @@ export default function Home() {
           ) : null}
         </div>
 
-        <Link to="/members" className="alliance-card" style={{ display: 'block' }}>
-          <img 
-            src={bannerSrc} 
-            alt="Alliance banner" 
-            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} 
-          />
+       <Link to="/members" className="alliance-card" style={{ display: 'block' }}>
+  <img 
+    src="/images/alliance-banner.jpg" 
+    alt="Alliance Banner" 
+    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} 
+  />
+</Link>
         </Link>
       </section>
 
