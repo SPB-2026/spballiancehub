@@ -11,7 +11,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrende
 function mediaUrl(url) {
   if (!url) return '';
   if (/^https?:\/\//i.test(url)) return url;
-  return `${API_BASE}${url.startsWith('/') ? '' : '/'}${url}`;
+  return `${API_BASE}${url}`;
 }
 
 export default function AdminMedia() {
