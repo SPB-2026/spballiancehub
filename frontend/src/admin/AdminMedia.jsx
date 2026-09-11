@@ -69,7 +69,7 @@ export default function AdminMedia() {
           <h1>Media <span className="text-gold">Library</span></h1>
           <p>Upload images once and reuse them across news covers, event images, tips, the Home banner, favicon and logo.</p>
         </div>
-        <label style={{ display: 'inline-flex' }}>
+        <label style={{ display: 'inline-flex', cursor: uploading ? 'not-allowed' : 'pointer' }}>
           <span className="btn btn-gold" style={{ opacity: uploading ? 0.6 : 1 }} aria-hidden="true">
             {uploading ? 'Uploading…' : <><IconPlus /> Upload image</>}
           </span>
@@ -85,13 +85,20 @@ export default function AdminMedia() {
           <div className="media-grid">
             {data.map((m) => (
               <div className="media-item" key={m.id}>
-                <img src={mediaUrl(m.url)} alt={m.filename} loading="lazy" />
+                {/* Same image rendering as MediaPicker */}
+                <img src={mediaUrl(m.url)} alt={m.filename || 'Media item'} loading="lazy" />
                 <div className="media-item-info">
-                  <span className="mono" style={{ fontSize: 11 }}>{m.width}×{m.height} · {Math.max(1, Math.round(m.size / 1024))} KB</span>
-                  <span className="text-dim" style={{ fontSize: 11 }}>{m.uploaded_by ? `by ${m.uploaded_by} · ` : ''}{fmtDateTime(m.created_at)}</span>
+                  <span className="mono" style={{ fontSize: 11 }}>
+                    {m.width}×{m.height} · {Math.max(1, Math.round((m.size || 0) / 1024))} KB
+                  </span>
+                  <span className="text-dim" style={{ fontSize: 11 }}>
+                    {m.uploaded_by ? `by ${m.uploaded_by} · ` : ''}{fmtDateTime(m.created_at)}
+                  </span>
                   <div className="media-item-actions">
                     <button type="button" className="btn btn-ghost btn-sm" onClick={() => copyUrl(m.url)}>Copy URL</button>
-                    <button type="button" className="btn btn-danger btn-sm" onClick={() => setConfirm(m)} title="Delete image"><IconTrash size={13} /> Delete</button>
+                    <button type="button" className="btn btn-danger btn-sm" onClick={() => setConfirm(m)} title="Delete image">
+                      <IconTrash size={13} /> Delete
+                    </button>
                   </div>
                 </div>
               </div>
