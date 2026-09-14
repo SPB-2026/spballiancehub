@@ -22,7 +22,7 @@ export default function AdminMedia() {
   const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  async function upload(e) {
+async function upload(e) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -32,14 +32,29 @@ export default function AdminMedia() {
       // 1. Upload file directly from browser to ImgBB
       const imgbbData = await uploadDirectToImgBB(file);
 
-      // 2. Save only the text metadata and ImgBB CDN URL to your backend/database
-      const item = await api.post('/admin/media', {
-        url: imgbbData.url,
-        filename: imgbbData.filename,
-        width: imgbbData.width,
-        height: imgbbData.height,
-        size: imgbbData.size,
+      // 2. Get auth token from localStorage if your API uses JWT
+      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+
+      // 3. Post JSON metadata directly to Render using native fetch
+      const res = await fetch(`${API_BASE}/api/admin/media`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          url: imgbbData.url,
+          filename: imgbbData.filename,
+          width: Number(imgbbData.width) || 0,
+          height: Number(imgbbData.height) || 0,
+          size: Number(imgbbData.size) || 0,
+        }),
       });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || errData.message || 'Failed to save media metadata.');
+      }
 
       toast.success(
         'Image uploaded',
