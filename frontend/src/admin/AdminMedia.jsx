@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAsync } from '../hooks/useAsync.js';
 import { useToast } from '../components/Toast.jsx';
 import api from '../services/api.js';
+import { uploadDirectToImgBB } from '../services/imgbb.service.js';
 import { LoadingBox, ErrorState, EmptyState, Button, ConfirmDialog } from '../components/ui.jsx';
 import { fmtDateTime } from '../utils/format.js';
 import { IconPlus, IconTrash } from '../components/icons.jsx';
@@ -25,10 +26,25 @@ export default function AdminMedia() {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+
     setUploading(true);
     try {
-      const item = await api.upload('/admin/media', file, 'image');
-      toast.success('Image uploaded', `${item.width}×${item.height}px · ${Math.max(1, Math.round(item.size / 1024))} KB`);
+      // 1. Upload file directly from browser to ImgBB
+      const imgbbData = await uploadDirectToImgBB(file);
+
+      // 2. Save only the text metadata and ImgBB CDN URL to your backend/database
+      const item = await api.post('/admin/media', {
+        url: imgbbData.url,
+        filename: imgbbData.filename,
+        width: imgbbData.width,
+        height: imgbbData.height,
+        size: imgbbData.size,
+      });
+
+      toast.success(
+        'Image uploaded',
+        `${imgbbData.width}×${imgbbData.height}px · ${Math.max(1, Math.round(imgbbData.size / 1024))} KB`
+      );
       reload();
     } catch (err) {
       toast.error('Upload failed', err.message);
@@ -80,12 +96,11 @@ export default function AdminMedia() {
       {loading ? <LoadingBox label="Loading media…" /> :
         error ? <ErrorState error={error} onRetry={reload} /> :
         !data?.length ? (
-          <EmptyState icon="🖼️" title="No media yet" emptyText="Upload the first image (JPG, PNG or WebP, max 2 MB) to build the library." />
+          <EmptyState icon="🖼️" title="No media yet" emptyText="Upload the first image (JPG, PNG or WebP, max 32 MB) to build the library." />
         ) : (
           <div className="media-grid">
             {data.map((m) => (
               <div className="media-item" key={m.id}>
-                {/* Same image rendering as MediaPicker */}
                 <img src={mediaUrl(m.url)} alt={m.filename || 'Media item'} loading="lazy" />
                 <div className="media-item-info">
                   <span className="mono" style={{ fontSize: 11 }}>
