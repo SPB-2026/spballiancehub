@@ -29,13 +29,16 @@ async function upload(e) {
 
     setUploading(true);
     try {
-      // 1. Upload file directly from browser to ImgBB
+      // 1. Upload to ImgBB first
       const imgbbData = await uploadDirectToImgBB(file);
 
-      // 2. Get auth token from localStorage if your API uses JWT
-      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      // Guard: Do NOT call Render if ImgBB failed to return a URL
+      if (!imgbbData || !imgbbData.url) {
+        throw new Error('ImgBB upload completed, but no URL was generated.');
+      }
 
-      // 3. Post JSON metadata directly to Render using native fetch
+      // 2. Send the URL to Render DB
+      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
       const res = await fetch(`${API_BASE}/api/admin/media`, {
         method: 'POST',
         headers: {
@@ -45,23 +48,21 @@ async function upload(e) {
         body: JSON.stringify({
           url: imgbbData.url,
           filename: imgbbData.filename,
-          width: Number(imgbbData.width) || 0,
-          height: Number(imgbbData.height) || 0,
-          size: Number(imgbbData.size) || 0,
+          width: imgbbData.width,
+          height: imgbbData.height,
+          size: imgbbData.size,
         }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || errData.message || 'Failed to save media metadata.');
+        throw new Error(data.error || 'Failed to save URL to database.');
       }
 
-      toast.success(
-        'Image uploaded',
-        `${imgbbData.width}×${imgbbData.height}px · ${Math.max(1, Math.round(imgbbData.size / 1024))} KB`
-      );
+      toast.success('Image uploaded', `${imgbbData.width}×${imgbbData.height}px`);
       reload();
     } catch (err) {
+      console.error('[Upload Error]', err);
       toast.error('Upload failed', err.message);
     } finally {
       setUploading(false);
