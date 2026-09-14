@@ -1,5 +1,4 @@
 // Media library: uploads images to ImgBB CDN and records metadata in DB.
-const FormData = require('form-data');
 const { httpError } = require('../middleware/errors');
 const img = require('../utils/image');
 const Media = require('../models/media');
@@ -9,35 +8,44 @@ async function list() {
 }
 
 async function upload(file, adminName) {
+  if (!file || !file.buffer) {
+    throw httpError(400, 'No image file uploaded or file buffer is missing.');
+  }
+
   img.assertAllowedImage(file);
   const dims = img.assertDimensions(file.buffer, { min: 32, max: 2048 });
-
-  // 1. Prepare Base64 string for ImgBB API
-  const base64Image = file.buffer.toString('base64');
-
-  const formData = new FormData();
-  formData.append('image', base64Image);
 
   const apiKey = process.env.IMGBB_API_KEY;
   if (!apiKey) {
     throw httpError(500, 'IMGBB_API_KEY environment variable is missing on server.');
   }
 
-  // 2. Upload image to ImgBB
+  // Convert image buffer to base64 string
+  const base64Image = file.buffer.toString('base64');
+
+  // Use URLSearchParams to ensure payload reaches ImgBB as URL-encoded form data
+  const payload = new URLSearchParams();
+  payload.append('image', base64Image);
+
+  // Send request to ImgBB
   const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
     method: 'POST',
-    body: formData,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: payload.toString(),
   });
 
   const result = await response.json();
 
   if (!result.success) {
+    console.error('[spb] ImgBB error:', result);
     throw httpError(500, result.error?.message || 'ImgBB upload failed.');
   }
 
   const imgData = result.data;
 
-  // 3. Save permanent ImgBB CDN URL to PostgreSQL database via existing Media model
+  // Save permanent ImgBB CDN URL to database via Media model
   return await Media.add({
     url: imgData.url,           // Permanent link (e.g. https://i.ibb.co/...)
     filename: file.originalname,
@@ -58,7 +66,6 @@ async function remove(id) {
     throw httpError(409, `This image is in use by: ${refs.join(', ')}. Remove it from that content first.`);
   }
 
-  // Delete DB record (file remains on ImgBB CDN without breaking local disk)
   await Media.remove(id);
   return { ok: true };
 }
