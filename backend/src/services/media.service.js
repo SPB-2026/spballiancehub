@@ -11,21 +11,26 @@ async function list() {
  * @param {Object} metadata - { url, filename, width, height, size }
  * @param {string} adminName - Name of uploading admin
  */
-async function upload(payload, adminName) {
-  // Extract body properties cleanly
-  const data = payload?.body || payload;
+async function upload(body, adminName) {
+  // Ensure req.body contains the url property from frontend
+  const url = body?.url;
+  const filename = body?.filename || 'imgbb_upload';
+  const width = Number(body?.width) || 0;
+  const height = Number(body?.height) || 0;
+  const size = Number(body?.size) || 0;
 
-  if (!data || !data.url) {
+  if (!url) {
     throw httpError(400, 'Image URL is required.');
   }
 
+  // Insert the ImgBB CDN URL record into PostgreSQL
   return await Media.add({
-    url: data.url,
-    filename: data.filename || 'imgbb_upload',
+    url,
+    filename,
     mime: 'image/jpeg',
-    size: data.size || 0,
-    width: data.width || 0,
-    height: data.height || 0,
+    size,
+    width,
+    height,
     uploaded_by: adminName || null,
   });
 }
