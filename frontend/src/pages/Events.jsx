@@ -2,6 +2,7 @@ import React from 'react';
 import { useAsync } from '../hooks/useAsync.js';
 import api from '../services/api.js';
 import { LoadingBox, ErrorState, Badge, Countdown, EmptyState } from '../components/ui.jsx';
+import RichContent from '../components/RichContent.jsx';
 import { fmtDate, fmtTime } from '../utils/format.js';
 
 const SECTIONS = [
@@ -71,7 +72,7 @@ function EventRow({ event }) {
           <Badge kind={event.status === 'ongoing' ? 'green' : event.status === 'completed' ? 'gray' : 'blue'} dot>{event.status}</Badge>
           <Badge kind="gray">{event.category}</Badge>
         </div>
-        <p>{event.description}</p>
+        <RichContent html={event.description} />
         <div className="flex gap-2 wrap" style={{ marginTop: 8 }}>
           <span className="participation">📅 {fmtDate(event.starts_at)} · {fmtTime(event.starts_at)} → {fmtDate(event.ends_at)} · {fmtTime(event.ends_at)}</span>
           {event.location ? <span className="participation">📍 {event.location}</span> : null}

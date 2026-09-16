@@ -67,6 +67,15 @@ export function countdownText(targetIso) {
   return `${m}m ${s}s`;
 }
 
+// Short plain-text preview for a card/list excerpt, given rich (HTML) or
+// legacy plain-text content — strips tags and collapses whitespace.
+export function excerptText(raw, max = 160) {
+  const s = String(raw || '');
+  const plain = s.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (plain.length <= max) return plain;
+  return `${plain.slice(0, max).trim()}…`;
+}
+
 export function num(n) {
   if (n === null || n === undefined) return '—';
   return Number(n).toLocaleString();

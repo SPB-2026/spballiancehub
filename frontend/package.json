@@ -2,7 +2,7 @@
   "name": "spb-alliance-hub",
   "version": "1.0.0",
   "private": true,
-  "description": "SPB Alliance Hub — a private alliance management and gaming utility command center for the SPB Alliance in Kingshot.",
+  "description": "SPB Alliance Hub \u2014 a private alliance management and gaming utility command center for the SPB Alliance in Kingshot.",
   "main": "backend/server.js",
   "scripts": {
     "setup": "node backend/scripts/setup.js",
@@ -27,7 +27,8 @@
     "qs": "^6.16.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.18.3"
+    "react-router-dom": "^7.18.3",
+    "dompurify": "^3.1.6"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",

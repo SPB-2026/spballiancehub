@@ -248,6 +248,34 @@ main, .site-footer { position: relative; z-index: 1; }
 .input.invalid { border-color: var(--red); }
 .input.invalid:focus { border-color: var(--red); box-shadow: 0 0 0 4px rgba(208, 106, 106, 0.16); }
 
+/* ────────────────────────────────────────────────────────── Rich text editor */
+.rte { border: 1px solid rgba(168, 179, 194, 0.22); border-radius: 12px; background: rgba(5, 9, 18, 0.68); overflow: hidden; transition: border-color 0.16s var(--ease), box-shadow 0.16s var(--ease); }
+.rte:focus-within { border-color: var(--gold); background: rgba(5, 9, 18, 0.85); box-shadow: var(--ring); }
+.rte-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; padding: 7px 8px; border-bottom: 1px solid rgba(168, 179, 194, 0.16); background: rgba(255, 255, 255, 0.02); }
+.rte-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 28px; border-radius: 7px; border: 1px solid transparent; background: transparent; color: var(--text-2); font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.14s var(--ease), color 0.14s var(--ease); }
+.rte-btn:hover { background: rgba(255, 255, 255, 0.06); color: var(--text-1); }
+.rte-btn svg { width: 15px; height: 15px; }
+.rte-sep { width: 1px; height: 20px; background: rgba(168, 179, 194, 0.18); margin: 0 3px; }
+.rte-swatch { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.25); cursor: pointer; padding: 0; }
+.rte-color-custom { width: 22px; height: 22px; border-radius: 6px; border: 1px solid rgba(168, 179, 194, 0.3); background: transparent; padding: 0; cursor: pointer; }
+.rte-editor { min-height: 110px; padding: 11px 14px; font-size: 14px; line-height: 1.6; color: var(--text-1); outline: none; }
+.rte-editor:empty:before { content: attr(data-placeholder); color: #5d6c85; }
+.rte-editor p { margin: 0 0 12px; }
+.rte-editor p:last-child { margin-bottom: 0; }
+.rte-editor img { max-width: 100%; border-radius: 8px; margin: 8px 0; display: block; }
+.rte-editor ul { margin: 0 0 12px 20px; }
+.rte-editor a { color: var(--gold); text-decoration: underline; }
+.rte-count { padding: 5px 10px; font-size: 11px; color: var(--text-3); text-align: right; border-top: 1px solid rgba(168, 179, 194, 0.1); }
+
+/* Rendered rich content (public + admin previews) — same typographic rules
+   as the editor surface above so what you write is what you get. */
+.rich-content p { margin: 0 0 14px; }
+.rich-content p:last-child { margin-bottom: 0; }
+.rich-content img { max-width: 100%; border-radius: 10px; margin: 14px 0; display: block; }
+.rich-content ul, .rich-content ol { margin: 0 0 14px 22px; }
+.rich-content a { color: var(--gold); text-decoration: underline; }
+.rich-content blockquote { border-left: 3px solid var(--gold-dim); margin: 0 0 14px; padding: 4px 0 4px 14px; color: var(--text-2); font-style: italic; }
+
 .form-error { color: var(--red); font-size: 13px; margin-top: 8px; }
 .form-success { color: var(--green); font-size: 13px; margin-top: 8px; }
 

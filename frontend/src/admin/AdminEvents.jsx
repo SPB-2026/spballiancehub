@@ -5,6 +5,7 @@ import api from '../services/api.js';
 import AdminTable from './AdminTable.jsx';
 import MediaPicker from '../components/MediaPicker.jsx';
 import { Button, Badge, Modal, Field, ConfirmDialog } from '../components/ui.jsx';
+import RichTextEditor from '../components/RichTextEditor.jsx';
 import { fmtDate, fmtTime } from '../utils/format.js';
 import { IconPlus, IconEdit, IconTrash, IconCheck } from '../components/icons.jsx';
 
@@ -202,8 +203,8 @@ export default function AdminEvents() {
             <Field label="Event image" id="ev-image" hint="Shown as a thumbnail on the member events page and calendar.">
               <MediaPicker initial={form.image} onPick={(url) => setForm({ ...form, image: url })} label="Choose image" />
             </Field>
-            <Field label="Description" id="ev-desc">
-              <textarea id="ev-desc" className="textarea" value={form.description} maxLength={2000} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <Field label="Description" id="ev-desc" hint="Bold, italic, colored text and inline images are supported.">
+              <RichTextEditor value={form.description} onChange={(html) => setForm((f) => ({ ...f, description: html }))} minHeight={130} maxLength={2000} placeholder="Write the event description…" />
             </Field>
             <label className="checkbox-row">
               <input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} />

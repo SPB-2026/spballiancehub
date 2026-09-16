@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useAsync } from '../hooks/useAsync.js';
 import api from '../services/api.js';
 import { LoadingBox, ErrorState, Badge } from '../components/ui.jsx';
+import RichContent from '../components/RichContent.jsx';
 import { asTagArray } from '../utils/format.js';
 
 const CATEGORY_LABELS = {
@@ -40,10 +41,9 @@ export default function TipArticle() {
             {asTagArray(a.tags).map((t) => <span className="tip-tag" key={t}>#{t}</span>)}
           </div>
         ) : null}
-        <div
-  className="article-body"
-  dangerouslySetInnerHTML={{ __html: a.body }}
-/>
+        <div className="article-body">
+          <RichContent html={a.body} />
+        </div>
       </div>
     </div>
   );

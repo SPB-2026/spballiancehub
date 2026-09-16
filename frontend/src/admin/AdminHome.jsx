@@ -4,6 +4,7 @@ import { useToast } from '../components/Toast.jsx';
 import api from '../services/api.js';
 import MediaPicker from '../components/MediaPicker.jsx';
 import { Button, Field, Badge } from '../components/ui.jsx';
+import RichTextEditor from '../components/RichTextEditor.jsx';
 
 const DEFAULTS = {
   home_title: 'Welcome to',
@@ -13,7 +14,6 @@ const DEFAULTS = {
   home_primary_link: '/members',
   home_secondary_label: 'Event Calendar',
   home_secondary_link: '/calendar',
-  home_banner: '/images/alliance-banner.jpg', // GitHub public/images path
 };
 
 export default function AdminHome() {
@@ -27,7 +27,7 @@ export default function AdminHome() {
     home_primary_link: settings?.home_primary_link || DEFAULTS.home_primary_link,
     home_secondary_label: settings?.home_secondary_label || DEFAULTS.home_secondary_label,
     home_secondary_link: settings?.home_secondary_link || DEFAULTS.home_secondary_link,
-    home_banner: settings?.home_banner || DEFAULTS.home_banner,
+    home_banner: settings?.home_banner || '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -67,8 +67,8 @@ export default function AdminHome() {
             <Field label="Title accent (gold part)" id="h-accent" hint="e.g. “SPB Alliance”. Leave empty for a single-color title.">
               <input id="h-accent" className="input" value={form.home_accent} maxLength={60} onChange={(e) => setForm({ ...form, home_accent: e.target.value })} />
             </Field>
-            <Field label="Description" id="h-text">
-              <textarea id="h-text" className="textarea" style={{ minHeight: 110 }} value={form.home_text} maxLength={500} onChange={(e) => setForm({ ...form, home_text: e.target.value })} />
+            <Field label="Description" id="h-text" hint="Bold, italic and colored text are supported.">
+              <RichTextEditor value={form.home_text} onChange={(html) => setForm((f) => ({ ...f, home_text: html }))} minHeight={110} maxLength={500} placeholder="Write the hero description…" />
             </Field>
           </div>
           <h2 style={{ fontSize: 17, margin: '20px 0 16px' }}>Action Buttons</h2>
@@ -86,19 +86,10 @@ export default function AdminHome() {
               <input id="h-su" className="input" value={form.home_secondary_link} maxLength={120} onChange={(e) => setForm({ ...form, home_secondary_link: e.target.value })} required />
             </Field>
           </div>
-          <h2 style={{ fontSize: 17, margin: '20px 0 10px' }}>Banner Image Path</h2>
-          <Field label="Image Path or URL" id="h-banner" hint="Type path directly (e.g., /images/alliance-banner.jpg) or select from Media library.">
-            <input 
-              id="h-banner" 
-              className="input" 
-              value={form.home_banner} 
-              onChange={(e) => setForm({ ...form, home_banner: e.target.value })} 
-              placeholder="/images/alliance-banner.jpg"
-            />
+          <h2 style={{ fontSize: 17, margin: '20px 0 10px' }}>Banner Image (right card)</h2>
+          <Field label="" hint="Optional. Shown in the hero's right card instead of the castle emblem. Pick from the Media library.">
+            <MediaPicker initial={form.home_banner} onPick={(url) => setForm({ ...form, home_banner: url })} label="Choose banner" />
           </Field>
-          <div className="mt-2">
-            <MediaPicker initial={form.home_banner} onPick={(url) => setForm({ ...form, home_banner: url })} label="Choose from library" />
-          </div>
 
           {error ? <div className="form-error">{error}</div> : null}
           <div className="mt-2">
@@ -119,12 +110,9 @@ export default function AdminHome() {
               <span className="btn btn-outline btn-sm">{form.home_secondary_label || 'Secondary'} → {form.home_secondary_link || '/…'}</span>
             </div>
             <div style={{ marginTop: 16, borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(168,179,194,0.15)' }}>
-              <img 
-                key={form.home_banner}
-                src={form.home_banner || '/images/alliance-banner.jpg'} 
-                alt="Banner preview" 
-                style={{ width: '100%', maxHeight: 130, objectFit: 'cover', display: 'block' }} 
-              />
+              {form.home_banner
+                ? <img src={form.home_banner} alt="Banner preview" style={{ width: '100%', maxHeight: 130, objectFit: 'cover', display: 'block' }} />
+                : <div style={{ padding: '26px 12px', textAlign: 'center', fontSize: 30 }} aria-hidden="true">🏰</div>}
             </div>
           </div>
         </div>

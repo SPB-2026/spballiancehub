@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Emblem from './Emblem.jsx';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { IconDiscord, IconYouTube, IconMail } from './icons.jsx';
+import RichContent from './RichContent.jsx';
 
 export default function Footer() {
   const { settings } = useAuth();
@@ -58,7 +59,11 @@ export default function Footer() {
         </div>
 
         <div className="footer-copy">
-          <span>{settings?.footer_text || `© ${year} ${settings?.alliance_name || 'SPB Alliance'}. For alliance members only.`}</span>
+          {settings?.footer_text ? (
+            <RichContent html={settings.footer_text} style={{ display: 'inline' }} />
+          ) : (
+            <span>{`© ${year} ${settings?.alliance_name || 'SPB Alliance'}. For alliance members only.`}</span>
+          )}
           <span className="mono">
             {settings?.contact_email ? `Contact: ${settings.contact_email} · ` : ''}
             {settings?.alliance_rank ? `Rank: ${settings.alliance_rank} · ` : ''}

@@ -4,6 +4,7 @@ import { useToast } from '../components/Toast.jsx';
 import api from '../services/api.js';
 import AdminTable from './AdminTable.jsx';
 import { Button, Badge, Modal, Field, ConfirmDialog } from '../components/ui.jsx';
+import RichTextEditor from '../components/RichTextEditor.jsx';
 import { fmtDate } from '../utils/format.js';
 import { IconPlus, IconEdit, IconTrash, IconImage, IconCheck } from '../components/icons.jsx';
 
@@ -211,8 +212,8 @@ export default function AdminNews() {
             <Field label="Summary" id="n-summary" hint="Short description shown on the news card.">
               <textarea id="n-summary" className="textarea" style={{ minHeight: 70 }} value={form.summary} maxLength={400} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
             </Field>
-            <Field label="Full article" id="n-body" hint="Separate paragraphs with a blank line.">
-              <textarea id="n-body" className="textarea" style={{ minHeight: 220 }} value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} required />
+            <Field label="Full article" id="n-body" hint="Bold, italic, colored text and inline images are supported.">
+              <RichTextEditor value={form.body} onChange={(html) => setForm((f) => ({ ...f, body: html }))} minHeight={220} maxLength={20000} placeholder="Write the article…" />
             </Field>
             <label className="checkbox-row">
               <input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} />

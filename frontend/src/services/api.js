@@ -6,7 +6,7 @@
 // Either channel authenticates; logout clears both.
 
 const SESSION_KEY = 'spb_session';
-const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export function getSessionToken() {
   try { return localStorage.getItem(SESSION_KEY) || null; } catch { return null; }

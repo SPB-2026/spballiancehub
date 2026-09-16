@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAsync } from '../hooks/useAsync.js';
 import api from '../services/api.js';
 import { LoadingBox, ErrorState, EmptyState } from '../components/ui.jsx';
-import { fmtDate } from '../utils/format.js';
+import { fmtDate, excerptText } from '../utils/format.js';
 
 const CATEGORY_LABELS = {
   general: 'General Tips',
@@ -71,7 +71,7 @@ export default function Tips() {
                 {CATEGORY_LABELS[a.category] || a.category}
               </span>
               <h3>{a.title}</h3>
-              <p>{a.body.split(/\n\n+/)[0]}</p>
+              <p>{excerptText(a.body, 140)}</p>
               <div className="card-foot">
                 <span className="cf-date">{fmtDate(a.published_at)}</span>
                 <span className="read-more">Read more <span className="rm-arrow">→</span></span>

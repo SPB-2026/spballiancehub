@@ -4,11 +4,38 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useAsync } from '../hooks/useAsync.js';
 import api from '../services/api.js';
 import { Button, Badge, LoadingBox, EmptyState, ErrorState, Countdown } from '../components/ui.jsx';
-import { fmtDate, fmtTime } from '../utils/format.js';
+import RichContent from '../components/RichContent.jsx';
+import { fmtDate, fmtTime, excerptText } from '../utils/format.js';
 import {
   IconUsers, IconTrophy, IconCalendar, IconGift, IconBook,
   IconCrown,
 } from '../components/icons.jsx';
+
+const CATEGORY_LABELS = {
+  general: 'General Tips',
+  heroes: 'Heroes & Troops',
+  city: 'City Development',
+  resources: 'Resources',
+  combat: 'Combat & PvP',
+  alliance: 'Alliance Strategy',
+  events: 'Events',
+  formations: 'Formations & Marches',
+  equipment: 'Equipment & Upgrades',
+  f2p: 'F2P & Spending',
+};
+
+const CATEGORY_COLORS = {
+  general: 'red',
+  heroes: 'orange',
+  city: 'gold',
+  resources: 'blue',
+  combat: 'violet',
+  alliance: 'green',
+  events: 'orange',
+  formations: 'blue',
+  equipment: 'brown',
+  f2p: 'gray',
+};
 
 const DEFAULT_HERO = {
   title: 'Welcome to',
@@ -51,13 +78,6 @@ export default function Home() {
     secondaryLink: settings?.home_secondary_link || DEFAULT_HERO.secondaryLink,
   };
 
-  // Resolves the image path correctly from the frontend/public/ folder
-  const bannerSrc = settings?.home_banner 
-    ? (settings.home_banner.startsWith('http') || settings.home_banner.startsWith('/') 
-        ? settings.home_banner 
-        : `/images/${settings.home_banner}`)
-    : '/images/alliance-banner.jpg';
-
   return (
     <div className="page">
       {/* HERO — fully editable from the admin Home Page panel */}
@@ -66,7 +86,7 @@ export default function Home() {
           <h1>
             {hero.title} <span className="gold">{hero.accent}</span>
           </h1>
-          <p className="hero-text">{hero.text}</p>
+          <RichContent html={hero.text} className="hero-text" />
           <div className="hero-actions">
             <Link to={hero.primaryLink}><Button variant="gold" icon={<IconUsers />}>{hero.primaryLabel}</Button></Link>
             <Link to={hero.secondaryLink}><Button variant="outline" icon={<IconCalendar />}>{hero.secondaryLabel}</Button></Link>
@@ -74,22 +94,25 @@ export default function Home() {
           {announcements.length === 0 && settings?.announcement ? (
             <div className="announcement hero-announce" role="note">
               <span className="announce-pill">📣 Announcement</span>
-              <span>{settings.announcement}</span>
+              <RichContent html={settings.announcement} />
             </div>
           ) : null}
         </div>
 
-       <Link to="/members" className="alliance-card" style={{ display: 'block' }}>
-  <img 
-    src="/images/alliance-banner.jpg" 
-    alt="Alliance Banner" 
-    style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} 
-  />
-</Link>
-        </Link>
+        {settings?.home_banner ? (
+          <Link to="/members" className="alliance-card" style={{ display: 'block' }}>
+            <img src={settings.home_banner} alt="Alliance banner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
+          </Link>
+        ) : (
+          <div className="alliance-card">
+            <div className="ac-castle" aria-hidden="true">🏰</div>
+            <div className="ac-label">Kingshot Alliance</div>
+            <Link to="/leaderboard" className="ac-btn">🏰 Kingshot Alliance</Link>
+          </div>
+        )}
       </section>
 
-      {/* ANNOUNCEMENTS */}
+      {/* ANNOUNCEMENTS — admin-managed, prioritized, with expiration */}
       {announcements.length > 0 ? (
         <section className="section" aria-label="Announcements">
           <div className="section-head">
@@ -103,7 +126,7 @@ export default function Home() {
                   <Badge kind="gray">{fmtDate(a.created_at)}</Badge>
                   {a.expires_at ? <Badge kind="blue">until {fmtDate(a.expires_at)}</Badge> : null}
                 </div>
-                {a.body ? <p className="text-dim" style={{ fontSize: 13.5, marginTop: 6 }}>{a.body}</p> : null}
+                {a.body ? <RichContent html={a.body} className="text-dim" style={{ fontSize: 13.5, marginTop: 6 }} /> : null}
               </div>
             ))}
           </div>
@@ -160,11 +183,11 @@ export default function Home() {
           <div className="grid grid-3">
             {latestTips.map((a) => (
               <Link to={`/tips/${a.id}`} key={a.id} className="card tip-card card-hover" style={{ color: 'inherit' }}>
-                <span className="cat-pill">
-                  {a.category}
+                <span className={`cat-pill${CATEGORY_COLORS[a.category] ? ` ${CATEGORY_COLORS[a.category]}` : ''}`}>
+                  {CATEGORY_LABELS[a.category] || a.category}
                 </span>
                 <h3>{a.title}</h3>
-                <p>{a.body.split(/\n\n+/)[0]}</p>
+                <p>{excerptText(a.body, 140)}</p>
                 <div className="card-foot">
                   <span className="cf-date">{fmtDate(a.published_at)}</span>
                   <span className="read-more">Read more <span className="rm-arrow">→</span></span>

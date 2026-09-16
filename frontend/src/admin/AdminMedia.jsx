@@ -2,18 +2,9 @@ import React, { useState } from 'react';
 import { useAsync } from '../hooks/useAsync.js';
 import { useToast } from '../components/Toast.jsx';
 import api from '../services/api.js';
-import { uploadDirectToImgBB } from '../services/imgbb.service.js';
 import { LoadingBox, ErrorState, EmptyState, Button, ConfirmDialog } from '../components/ui.jsx';
 import { fmtDateTime } from '../utils/format.js';
 import { IconPlus, IconTrash } from '../components/icons.jsx';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'https://spballiancehub.onrender.com';
-
-function mediaUrl(url) {
-  if (!url) return '';
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${API_BASE}${url}`;
-}
 
 export default function AdminMedia() {
   const toast = useToast();
@@ -22,47 +13,16 @@ export default function AdminMedia() {
   const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
 
-async function upload(e) {
+  async function upload(e) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-
     setUploading(true);
     try {
-      // 1. Upload to ImgBB first
-      const imgbbData = await uploadDirectToImgBB(file);
-
-      // Guard: Do NOT call Render if ImgBB failed to return a URL
-      if (!imgbbData || !imgbbData.url) {
-        throw new Error('ImgBB upload completed, but no URL was generated.');
-      }
-
-      // 2. Send the URL to Render DB
-      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
-      const res = await fetch(`${API_BASE}/api/admin/media`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          url: imgbbData.url,
-          filename: imgbbData.filename,
-          width: imgbbData.width,
-          height: imgbbData.height,
-          size: imgbbData.size,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to save URL to database.');
-      }
-
-      toast.success('Image uploaded', `${imgbbData.width}×${imgbbData.height}px`);
+      const item = await api.upload('/admin/media', file, 'image');
+      toast.success('Image uploaded', `${item.width}×${item.height}px · ${Math.max(1, Math.round(item.size / 1024))} KB`);
       reload();
     } catch (err) {
-      console.error('[Upload Error]', err);
       toast.error('Upload failed', err.message);
     } finally {
       setUploading(false);
@@ -70,10 +30,9 @@ async function upload(e) {
   }
 
   async function copyUrl(url) {
-    const fullUrl = mediaUrl(url);
     try {
-      await navigator.clipboard.writeText(fullUrl);
-      toast.info('URL copied', fullUrl);
+      await navigator.clipboard.writeText(url);
+      toast.info('URL copied', url);
     } catch {
       toast.error('Copy failed', 'Select the URL manually.');
     }
@@ -101,7 +60,7 @@ async function upload(e) {
           <h1>Media <span className="text-gold">Library</span></h1>
           <p>Upload images once and reuse them across news covers, event images, tips, the Home banner, favicon and logo.</p>
         </div>
-        <label style={{ display: 'inline-flex', cursor: uploading ? 'not-allowed' : 'pointer' }}>
+        <label style={{ display: 'inline-flex' }}>
           <span className="btn btn-gold" style={{ opacity: uploading ? 0.6 : 1 }} aria-hidden="true">
             {uploading ? 'Uploading…' : <><IconPlus /> Upload image</>}
           </span>
@@ -112,24 +71,18 @@ async function upload(e) {
       {loading ? <LoadingBox label="Loading media…" /> :
         error ? <ErrorState error={error} onRetry={reload} /> :
         !data?.length ? (
-          <EmptyState icon="🖼️" title="No media yet" emptyText="Upload the first image (JPG, PNG or WebP, max 32 MB) to build the library." />
+          <EmptyState icon="🖼️" title="No media yet" emptyText="Upload the first image (JPG, PNG or WebP, max 2 MB) to build the library." />
         ) : (
           <div className="media-grid">
             {data.map((m) => (
               <div className="media-item" key={m.id}>
-                <img src={mediaUrl(m.url)} alt={m.filename || 'Media item'} loading="lazy" />
+                <img src={m.url} alt={m.filename} loading="lazy" />
                 <div className="media-item-info">
-                  <span className="mono" style={{ fontSize: 11 }}>
-                    {m.width}×{m.height} · {Math.max(1, Math.round((m.size || 0) / 1024))} KB
-                  </span>
-                  <span className="text-dim" style={{ fontSize: 11 }}>
-                    {m.uploaded_by ? `by ${m.uploaded_by} · ` : ''}{fmtDateTime(m.created_at)}
-                  </span>
+                  <span className="mono" style={{ fontSize: 11 }}>{m.width}×{m.height} · {Math.max(1, Math.round(m.size / 1024))} KB</span>
+                  <span className="text-dim" style={{ fontSize: 11 }}>{m.uploaded_by ? `by ${m.uploaded_by} · ` : ''}{fmtDateTime(m.created_at)}</span>
                   <div className="media-item-actions">
                     <button type="button" className="btn btn-ghost btn-sm" onClick={() => copyUrl(m.url)}>Copy URL</button>
-                    <button type="button" className="btn btn-danger btn-sm" onClick={() => setConfirm(m)} title="Delete image">
-                      <IconTrash size={13} /> Delete
-                    </button>
+                    <button type="button" className="btn btn-danger btn-sm" onClick={() => setConfirm(m)} title="Delete image"><IconTrash size={13} /> Delete</button>
                   </div>
                 </div>
               </div>

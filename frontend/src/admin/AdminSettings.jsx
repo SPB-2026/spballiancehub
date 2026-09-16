@@ -5,6 +5,7 @@ import api from '../services/api.js';
 import { Button, Field, Badge } from '../components/ui.jsx';
 import Emblem from '../components/Emblem.jsx';
 import MediaPicker from '../components/MediaPicker.jsx';
+import RichTextEditor from '../components/RichTextEditor.jsx';
 
 const TIMEZONES = ['UTC', 'Asia/Kolkata', 'Asia/Dubai', 'Europe/London', 'Europe/Berlin', 'Europe/Paris', 'America/New_York', 'America/Los_Angeles', 'Australia/Sydney'];
 
@@ -87,7 +88,7 @@ export default function AdminSettings() {
             </select>
           </Field>
           <Field label="Website announcement" id="set-ann" hint="Legacy banner on the Home page. Prefer the Announcements section for scheduled, prioritized notices.">
-            <textarea id="set-ann" className="textarea" style={{ minHeight: 70 }} value={form.announcement} maxLength={300} onChange={(e) => setForm({ ...form, announcement: e.target.value })} />
+            <RichTextEditor value={form.announcement} onChange={(html) => setForm((f) => ({ ...f, announcement: html }))} minHeight={70} maxLength={300} placeholder="Write the announcement…" />
           </Field>
 
           <hr className="card-divider" />
@@ -98,8 +99,8 @@ export default function AdminSettings() {
           <Field label="Contact email" id="set-contact" hint="Shown in the footer as the alliance contact address.">
             <input id="set-contact" type="email" className="input" value={form.contact_email} maxLength={160} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} />
           </Field>
-          <Field label="Footer text" id="set-footer" hint="Replaces the default footer line. Leave empty for the default.">
-            <textarea id="set-footer" className="textarea" style={{ minHeight: 64 }} value={form.footer_text} maxLength={200} onChange={(e) => setForm({ ...form, footer_text: e.target.value })} />
+          <Field label="Footer text" id="set-footer" hint="Replaces the default footer line. Leave empty for the default. Bold, italic and colored text are supported.">
+            <RichTextEditor value={form.footer_text} onChange={(html) => setForm((f) => ({ ...f, footer_text: html }))} minHeight={64} maxLength={200} placeholder="Write the footer text…" />
           </Field>
 
           <hr className="card-divider" />

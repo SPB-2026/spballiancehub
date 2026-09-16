@@ -4,6 +4,7 @@ import { useToast } from '../components/Toast.jsx';
 import api from '../services/api.js';
 import AdminTable from './AdminTable.jsx';
 import { Button, Badge, Modal, Field, ConfirmDialog } from '../components/ui.jsx';
+import RichTextEditor from '../components/RichTextEditor.jsx';
 import { fmtDate } from '../utils/format.js';
 import { IconPlus, IconEdit, IconTrash, IconCheck } from '../components/icons.jsx';
 
@@ -159,8 +160,8 @@ export default function AdminAnnouncements() {
             <Field label="Title" id="a-title" hint="Short headline, e.g. “East Keep war this week”.">
               <input id="a-title" className="input" value={form.title} maxLength={120} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
             </Field>
-            <Field label="Message" id="a-body">
-              <textarea id="a-body" className="textarea" style={{ minHeight: 80 }} value={form.body} maxLength={500} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+            <Field label="Message" id="a-body" hint="Bold, italic and colored text are supported.">
+              <RichTextEditor value={form.body} onChange={(html) => setForm((f) => ({ ...f, body: html }))} minHeight={80} maxLength={500} placeholder="Write the announcement…" />
             </Field>
             <div className="settings-form">
               <Field label="Priority" id="a-prio" hint="Higher numbers appear first on the Home board.">

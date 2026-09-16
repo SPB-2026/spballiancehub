@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useAsync } from '../hooks/useAsync.js';
 import api from '../services/api.js';
 import { LoadingBox, ErrorState, Badge } from '../components/ui.jsx';
+import RichContent from '../components/RichContent.jsx';
 import { fmtDate } from '../utils/format.js';
 
 export default function NewsArticle() {
@@ -34,7 +35,7 @@ export default function NewsArticle() {
         </div>
         {n.summary ? <p className="article-meta" style={{ marginBottom: 24, color: 'var(--text-2)', fontStyle: 'italic' }}>{n.summary}</p> : null}
         <div className="article-body">
-          {n.body.split(/\n\n+/).map((p, i) => <p key={i}>{p}</p>)}
+          <RichContent html={n.body} />
         </div>
       </div>
     </div>
