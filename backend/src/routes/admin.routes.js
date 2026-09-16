@@ -115,7 +115,7 @@ router.delete('/announcements/:id', asyncHandler(async (req, res) => res.json(aw
 
 // ── Media library ───────────────────────────────────────────────────────────
 router.get('/media', asyncHandler(async (req, res) => res.json(await MediaService.list())));
-router.post('/media', asyncHandler(async (req, res) => res.status(201).json(await MediaService.upload(req.file, req.admin?.name))));
+router.post('/media', upload.single('image'), asyncHandler(async (req, res) => res.status(201).json(await MediaService.upload(req.file, req.admin?.name))));
 router.delete('/media/:id', asyncHandler(async (req, res) => res.json(await MediaService.remove(Number(req.params.id)))));
 
 // ── Member photo upload (admin) ────────────────────────────────────────────

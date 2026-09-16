@@ -70,6 +70,11 @@ const env = {
   // In production set a long random value via env (e.g. openssl rand -hex 32).
   // Locally falls back to dev value so `npm run dev` works without .env.
   JWT_SECRET: process.env.JWT_SECRET || 'dev-jwt-secret-change-me',
+
+  // ImgBB API key used to host uploaded images (avatars, covers, media
+  // library, logo, favicon) so they survive redeploys on hosts with an
+  // ephemeral filesystem. Get a free key at https://api.imgbb.com.
+  IMGBB_API_KEY: process.env.IMGBB_API_KEY || '',
 };
 
 module.exports = env;

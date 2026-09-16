@@ -2,6 +2,7 @@
 // source of truth for both, avoiding duplicate data).
 const { httpError } = require('../middleware/errors');
 const v = require('../utils/validate');
+const { cleanRichText } = require('../utils/richText');
 const Events = require('../models/events');
 
 const CATEGORIES = ['war', 'tournament', 'social', 'maintenance', 'other'];
@@ -32,7 +33,7 @@ function imageUrl(value) {
 
 async function create(input) {
   const title = v.str(input.title, { field: 'Event name', max: 120 });
-  const description = v.cleanText(input.description, { field: 'Description', max: 2000, optional: true });
+  const description = cleanRichText(input.description, { field: 'Description', max: 2000, optional: true });
   const category = v.oneOf(input.category || 'tournament', CATEGORIES, 'Category');
   const starts_at = v.isoDateTime(input.starts_at, { field: 'Start date/time' });
   const ends_at = v.isoDateTime(input.ends_at, { field: 'End date/time' });
@@ -49,7 +50,7 @@ async function update(id, input) {
   if (!existing) throw httpError(404, 'Event not found.');
   const fields = {};
   if (input.title !== undefined) fields.title = v.str(input.title, { field: 'Event name', max: 120 });
-  if (input.description !== undefined) fields.description = v.cleanText(input.description, { field: 'Description', max: 2000, optional: true });
+  if (input.description !== undefined) fields.description = cleanRichText(input.description, { field: 'Description', max: 2000, optional: true });
   if (input.category !== undefined) fields.category = v.oneOf(input.category, CATEGORIES, 'Category');
   if (input.starts_at !== undefined) fields.starts_at = v.isoDateTime(input.starts_at, { field: 'Start date/time' });
   if (input.ends_at !== undefined) fields.ends_at = v.isoDateTime(input.ends_at, { field: 'End date/time' });

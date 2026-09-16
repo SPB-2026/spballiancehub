@@ -1,14 +1,11 @@
 // News: public read access to published items, full CRUD for admins.
-const path = require('path');
-const fs = require('fs');
-const env = require('../config/env');
 const { httpError } = require('../middleware/errors');
 const v = require('../utils/validate');
+const { cleanRichText } = require('../utils/richText');
 const img = require('../utils/image');
+const { uploadToImgbb } = require('../utils/imgbb');
 const News = require('../models/news');
 
-const ROOT = path.resolve(__dirname, '..', '..', '..');
-const UPLOAD_DIR = path.join(ROOT, 'uploads');
 const CATEGORIES = ['alliance', 'war', 'tournament', 'update', 'announcement', 'community'];
 
 async function list() {
@@ -26,7 +23,7 @@ async function create(input, author) {
   const category = v.oneOf(input.category || 'alliance', CATEGORIES, 'Category');
   const cover = input.cover || null;
   const summary = v.cleanText(input.summary, { field: 'Summary', max: 400, optional: true });
-  const body = v.cleanText(input.body, { field: 'Content', max: 20000 });
+  const body = cleanRichText(input.body, { field: 'Content', max: 20000 });
   const published = Boolean(input.published);
   const featured = Boolean(input.featured);
   return await News.create({ title, category, cover, summary, body, published, author: author || 'SPB Command', featured });
@@ -40,7 +37,7 @@ async function update(id, input, author) {
   if (input.category !== undefined) fields.category = v.oneOf(input.category, CATEGORIES, 'Category');
   if (input.cover !== undefined) fields.cover = input.cover || existing.cover;
   if (input.summary !== undefined) fields.summary = v.cleanText(input.summary, { field: 'Summary', max: 400, optional: true });
-  if (input.body !== undefined) fields.body = v.cleanText(input.body, { field: 'Content', max: 20000 });
+  if (input.body !== undefined) fields.body = cleanRichText(input.body, { field: 'Content', max: 20000 });
   if (input.published !== undefined) {
     fields.published = input.published ? 1 : 0;
     if (input.published && !existing.published) fields.published_at = new Date().toISOString();
@@ -56,14 +53,12 @@ async function remove(id) {
   return { ok: true };
 }
 
-function uploadCover(file) {
+async function uploadCover(file) {
   img.assertAllowedImage(file);
   img.assertDimensions(file.buffer, { min: 128, max: 2048 });
-  const dir = path.join(UPLOAD_DIR, 'news');
-  fs.mkdirSync(dir, { recursive: true });
   const filename = img.safeFilename('cover', img.extFor(file.mimetype));
-  fs.writeFileSync(path.join(dir, filename), file.buffer);
-  return `/uploads/news/${filename}`;
+  const hosted = await uploadToImgbb(file.buffer, { filename });
+  return hosted.url;
 }
 
 module.exports = { list, get, create, update, remove, uploadCover, CATEGORIES };

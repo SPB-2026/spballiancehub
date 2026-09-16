@@ -1,14 +1,10 @@
 // Centralized website settings (alliance identity, social links, announcement...).
 const { httpError } = require('../middleware/errors');
 const v = require('../utils/validate');
+const { cleanRichText } = require('../utils/richText');
 const Settings = require('../models/settings');
 const img = require('../utils/image');
-const path = require('path');
-const fs = require('fs');
-const env = require('../config/env');
-
-const ROOT = path.resolve(__dirname, '..', '..', '..');
-const UPLOAD_DIR = path.join(ROOT, 'uploads');
+const { uploadToImgbb } = require('../utils/imgbb');
 
 async function publicSettings() {
   const s = await Settings.all();
@@ -56,7 +52,7 @@ async function updateMany(input, adminName) {
   if (input.alliance_name !== undefined) fields.alliance_name = v.str(input.alliance_name, { field: 'Alliance name', max: 60 });
   if (input.tagline !== undefined) fields.tagline = v.cleanText(input.tagline, { field: 'Tagline', max: 120, optional: true });
   if (input.alliance_rank !== undefined) fields.alliance_rank = v.cleanText(input.alliance_rank, { field: 'Alliance rank', max: 60, optional: true });
-  if (input.announcement !== undefined) fields.announcement = v.cleanText(input.announcement, { field: 'Announcement', max: 300, optional: true });
+  if (input.announcement !== undefined) fields.announcement = cleanRichText(input.announcement, { field: 'Announcement', max: 300, optional: true });
   if (input.discord_url !== undefined) fields.discord_url = v.safeUrl(input.discord_url, 'Discord URL') || '';
   if (input.youtube_url !== undefined) fields.youtube_url = v.safeUrl(input.youtube_url, 'YouTube URL') || '';
   if (input.timezone !== undefined) {
@@ -75,13 +71,13 @@ async function updateMany(input, adminName) {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw httpError(400, 'Enter a valid contact email or leave it empty.');
     fields.contact_email = email;
   }
-  if (input.footer_text !== undefined) fields.footer_text = v.cleanText(input.footer_text, { field: 'Footer text', max: 200, optional: true });
+  if (input.footer_text !== undefined) fields.footer_text = cleanRichText(input.footer_text, { field: 'Footer text', max: 200, optional: true });
   if (input.maintenance !== undefined) fields.maintenance = input.maintenance ? '1' : '0';
   if (input.favicon !== undefined) fields.favicon = uploadUrl(input.favicon, 'Favicon');
   // Home page content
   if (input.home_title !== undefined) fields.home_title = v.str(input.home_title, { field: 'Home title', max: 60 });
   if (input.home_accent !== undefined) fields.home_accent = v.cleanText(input.home_accent, { field: 'Home accent', max: 60, optional: true });
-  if (input.home_text !== undefined) fields.home_text = v.cleanText(input.home_text, { field: 'Home description', max: 500, optional: true });
+  if (input.home_text !== undefined) fields.home_text = cleanRichText(input.home_text, { field: 'Home description', max: 500, optional: true });
   if (input.home_primary_label !== undefined) fields.home_primary_label = v.str(input.home_primary_label, { field: 'Primary button label', max: 40 });
   if (input.home_primary_link !== undefined) fields.home_primary_link = internalLink(input.home_primary_link, 'Primary button link');
   if (input.home_secondary_label !== undefined) fields.home_secondary_label = v.str(input.home_secondary_label, { field: 'Secondary button label', max: 40 });
@@ -94,12 +90,10 @@ async function updateMany(input, adminName) {
 async function uploadLogo(file) {
   img.assertAllowedImage(file);
   img.assertDimensions(file.buffer, { min: 64, max: 1024 });
-  const dir = path.join(UPLOAD_DIR, 'avatars');
-  fs.mkdirSync(dir, { recursive: true });
   const filename = img.safeFilename('logo', img.extFor(file.mimetype));
-  fs.writeFileSync(path.join(dir, filename), file.buffer);
-  await Settings.set('logo', `/uploads/avatars/${filename}`);
-  return { ok: true, logo: `/uploads/avatars/${filename}` };
+  const hosted = await uploadToImgbb(file.buffer, { filename });
+  await Settings.set('logo', hosted.url);
+  return { ok: true, logo: hosted.url };
 }
 
 module.exports = { publicSettings, updateMany, uploadLogo };

@@ -1,6 +1,7 @@
 // Tips & Tricks knowledge base.
 const { httpError } = require('../middleware/errors');
 const v = require('../utils/validate');
+const { cleanRichText } = require('../utils/richText');
 const Articles = require('../models/articles');
 
 const CATEGORIES = ['general', 'heroes', 'city', 'resources', 'combat', 'alliance', 'events', 'formations', 'equipment', 'f2p'];
@@ -26,7 +27,7 @@ async function get(id) {
 async function create(input) {
   const title = v.str(input.title, { field: 'Title', max: 160 });
   const category = v.oneOf(input.category || 'general', CATEGORIES, 'Category');
-  const body = v.cleanText(input.body, { field: 'Content', max: 20000 });
+  const body = cleanRichText(input.body, { field: 'Content', max: 20000 });
   const tags = v.cleanText(tagsInput(input.tags) || '', { field: 'Tags', max: 120, optional: true });
   const published = Boolean(input.published);
   const cover = typeof input.cover === 'string' && input.cover.trim() ? input.cover.trim() : null;
@@ -40,7 +41,7 @@ async function update(id, input) {
   const fields = {};
   if (input.title !== undefined) fields.title = v.str(input.title, { field: 'Title', max: 160 });
   if (input.category !== undefined) fields.category = v.oneOf(input.category, CATEGORIES, 'Category');
-  if (input.body !== undefined) fields.body = v.cleanText(input.body, { field: 'Content', max: 20000 });
+  if (input.body !== undefined) fields.body = cleanRichText(input.body, { field: 'Content', max: 20000 });
   if (input.tags !== undefined) fields.tags = v.cleanText(tagsInput(input.tags), { field: 'Tags', max: 120, optional: true });
   if (input.published !== undefined) {
     fields.published = input.published ? 1 : 0;
