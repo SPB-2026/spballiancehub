@@ -183,6 +183,7 @@ export default function Home() {
           <div className="grid grid-3">
             {latestTips.map((a) => (
               <Link to={`/tips/${a.id}`} key={a.id} className="card tip-card card-hover" style={{ color: 'inherit' }}>
+                {a.cover ? <div className="news-cover"><img src={a.cover} alt="" loading="lazy" /></div> : null}
                 <span className={`cat-pill${CATEGORY_COLORS[a.category] ? ` ${CATEGORY_COLORS[a.category]}` : ''}`}>
                   {CATEGORY_LABELS[a.category] || a.category}
                 </span>

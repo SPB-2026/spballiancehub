@@ -36,6 +36,11 @@ export default function TipArticle() {
           <Badge kind="gold">{CATEGORY_LABELS[a.category] || a.category}</Badge>
           <h1>{a.title}</h1>
         </div>
+        {a.cover ? (
+          <div className="article-cover mt-1">
+            <img src={a.cover} alt="" style={{ width: '100%' }} />
+          </div>
+        ) : null}
         {asTagArray(a.tags).length ? (
           <div className="tip-tags" style={{ marginBottom: 24 }}>
             {asTagArray(a.tags).map((t) => <span className="tip-tag" key={t}>#{t}</span>)}

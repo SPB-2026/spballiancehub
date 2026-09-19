@@ -3,8 +3,12 @@ import { MediaPickerModal } from './MediaPicker.jsx';
 import { IconImage } from './icons.jsx';
 
 // Preset swatches matching the site's own theme tokens (see global.css :root).
+// "Default" sets the exact readable text color explicitly (rather than
+// clearing formatting) so it's guaranteed visible against the editor's white
+// background, and so continued typing after clicking it stays readable too.
+const DEFAULT_TEXT_COLOR = '#1a1f29';
 const SWATCHES = [
-  { label: 'Default', value: '' },
+  { label: 'Default', value: DEFAULT_TEXT_COLOR },
   { label: 'Gold', value: '#d4af37' },
   { label: 'Green', value: '#4caf7d' },
   { label: 'Red', value: '#d06a6a' },
@@ -40,8 +44,13 @@ export default function RichTextEditor({ value, onChange, minHeight = 130, maxLe
   useEffect(() => {
     if (editorRef.current) {
       editorRef.current.innerHTML = toEditableHtml(value);
+      editorRef.current.style.color = DEFAULT_TEXT_COLOR;
       setCount((editorRef.current.innerText || '').trim().length);
     }
+    // Firefox in particular handles execCommand formatting inconsistently
+    // without this — with it on, color/bold/etc. apply as plain inline
+    // styles that behave the same way across browsers.
+    try { document.execCommand('styleWithCSS', false, true); } catch { /* not supported */ }
     // Intentionally mount-only — see comment above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -60,7 +69,7 @@ export default function RichTextEditor({ value, onChange, minHeight = 130, maxLe
 
   function applyColor(color) {
     editorRef.current?.focus();
-    document.execCommand(color ? 'foreColor' : 'removeFormat', false, color || null);
+    document.execCommand('foreColor', false, color);
     emit();
   }
 
@@ -120,7 +129,7 @@ export default function RichTextEditor({ value, onChange, minHeight = 130, maxLe
             type="button"
             title={s.label}
             className="rte-swatch"
-            style={{ background: s.value || 'var(--text-1)' }}
+            style={{ background: s.value }}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => applyColor(s.value)}
           />

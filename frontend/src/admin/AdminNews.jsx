@@ -1,12 +1,13 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useAsync } from '../hooks/useAsync.js';
 import { useToast } from '../components/Toast.jsx';
 import api from '../services/api.js';
 import AdminTable from './AdminTable.jsx';
+import MediaPicker from '../components/MediaPicker.jsx';
 import { Button, Badge, Modal, Field, ConfirmDialog } from '../components/ui.jsx';
 import RichTextEditor from '../components/RichTextEditor.jsx';
 import { fmtDate } from '../utils/format.js';
-import { IconPlus, IconEdit, IconTrash, IconImage, IconCheck } from '../components/icons.jsx';
+import { IconPlus, IconEdit, IconTrash, IconCheck } from '../components/icons.jsx';
 
 const CATEGORIES = ['alliance', 'war', 'tournament', 'update', 'announcement', 'community'];
 
@@ -19,7 +20,6 @@ export default function AdminNews() {
   const [formError, setFormError] = useState('');
   const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
-  const coverRef = useRef(null);
 
   function emptyForm() {
     return { title: '', category: 'alliance', cover: '', summary: '', body: '', published: true, author: '', featured: false };
@@ -33,18 +33,6 @@ export default function AdminNews() {
     });
     setFormError('');
     setEditing(n);
-  }
-
-  async function uploadCover() {
-    const file = coverRef.current?.files?.[0];
-    if (!file) return;
-    try {
-      const { cover } = await api.upload('/admin/news/cover', file, 'cover');
-      setForm((f) => ({ ...f, cover }));
-      toast.success('Cover uploaded');
-    } catch (err) {
-      toast.error('Cover upload failed', err.message);
-    }
   }
 
   async function save(e) {
@@ -188,26 +176,9 @@ export default function AdminNews() {
               </Field>
             </div>
 
-            <div className="field">
-              <label id="n-cover-label">Cover image</label>
-              <div className="logo-preview">
-                {form.cover ? <img src={form.cover} alt="Cover preview" /> : <span className="logo-default skeleton" />}
-                <div style={{ flex: 1 }}>
-                  <input
-                    ref={coverRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={uploadCover}
-                    aria-labelledby="n-cover-label"
-                    style={{ fontSize: 13, color: 'var(--text-2)' }}
-                  />
-                  <div className="hint mt-1">JPG, PNG or WebP · max 2 MB</div>
-                  {form.cover ? (
-                    <button type="button" className="btn btn-ghost btn-sm mt-1" onClick={() => setForm({ ...form, cover: '' })}>Remove cover</button>
-                  ) : null}
-                </div>
-              </div>
-            </div>
+            <Field label="Cover image" id="n-cover" hint="Shown on the news card and at the top of the article.">
+              <MediaPicker initial={form.cover} onPick={(url) => setForm((f) => ({ ...f, cover: url }))} label="Choose cover" />
+            </Field>
 
             <Field label="Summary" id="n-summary" hint="Short description shown on the news card.">
               <textarea id="n-summary" className="textarea" style={{ minHeight: 70 }} value={form.summary} maxLength={400} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
