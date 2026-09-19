@@ -94,6 +94,17 @@ export default function RichTextEditor({ value, onChange, minHeight = 130, maxLe
     }
   }
 
+  // Pasted content often carries its own inline color/font from wherever it
+  // came from (another site, a Word doc, etc.) — including colors that are
+  // invisible against this editor's dark background. Strip formatting on
+  // paste so pasted text always inherits the editor's own readable color.
+  function onPaste(e) {
+    e.preventDefault();
+    const text = e.clipboardData?.getData('text/plain') || '';
+    if (text) document.execCommand('insertText', false, text);
+    emit();
+  }
+
   return (
     <div className="rte">
       <div className="rte-toolbar">
@@ -142,6 +153,7 @@ export default function RichTextEditor({ value, onChange, minHeight = 130, maxLe
         onInput={emit}
         onBlur={emit}
         onKeyDown={onKeyDown}
+        onPaste={onPaste}
       />
       <div className="rte-count">{count.toLocaleString()} / {maxLength.toLocaleString()}</div>
       {pickerOpen ? (
