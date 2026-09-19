@@ -12,6 +12,7 @@ const Gifts = require('../models/gifts');
 const Settings = require('../models/settings');
 const Activity = require('../models/activity');
 const Announcements = require('../models/announcements');
+const Media = require('../models/media');
 
 async function dashboard() {
   const events = await Events.list();
@@ -142,7 +143,7 @@ async function updateMember(id, input) {
       fields.avatar = null;
     } else {
       const a = v.str(input.avatar, { field: 'Avatar', max: 500 });
-      if (!a.startsWith('/uploads/')) throw httpError(400, 'Avatar must be an uploaded image.');
+      if (!(await Media.findByUrl(a))) throw httpError(400, 'Avatar must be an uploaded image.');
       fields.avatar = a;
     }
   }

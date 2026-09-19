@@ -16,7 +16,14 @@ const { httpError } = require('../middleware/errors');
 async function uploadToImgbb(buffer, { filename = 'image' } = {}) {
   const apiKey = env.IMGBB_API_KEY;
   if (!apiKey) {
-    throw httpError(500, 'Image hosting is not configured. Set IMGBB_API_KEY on the server.');
+    throw httpError(500, 'Image hosting is not configured. Set IMGBB_API_KEY on the server.', { expose: true });
+  }
+
+  if (typeof fetch === 'undefined' || typeof FormData === 'undefined' || typeof Blob === 'undefined') {
+    // fetch/FormData/Blob are built into Node 18+. If they're missing, the
+    // server is running an older Node version than this project requires
+    // (see package.json "engines").
+    throw httpError(500, 'Image uploads require Node.js 18 or newer on the server. Check your hosting platform\'s Node version setting.', { expose: true });
   }
 
   const form = new FormData();
@@ -26,25 +33,25 @@ async function uploadToImgbb(buffer, { filename = 'image' } = {}) {
   let res;
   try {
     res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: form });
-  } catch {
-    throw httpError(502, 'Could not reach the image host. Please try again.');
+  } catch (e) {
+    throw httpError(502, `Could not reach the image host: ${e.message || 'network error'}.`, { expose: true });
   }
 
   let json;
   try {
     json = await res.json();
   } catch {
-    throw httpError(502, 'The image host returned an unexpected response.');
+    throw httpError(502, 'The image host returned an unexpected response.', { expose: true });
   }
 
   if (!res.ok || !json || json.success !== true) {
     const msg = json?.error?.message || `Image host error (HTTP ${res.status}).`;
-    throw httpError(502, `Image upload failed: ${msg}`);
+    throw httpError(502, `Image upload failed: ${msg}`, { expose: true });
   }
 
   const d = json.data || {};
   const url = d.display_url || d.url || d.image?.url;
-  if (!url) throw httpError(502, 'Image host did not return a usable URL.');
+  if (!url) throw httpError(502, 'Image host did not return a usable URL.', { expose: true });
 
   return {
     url,

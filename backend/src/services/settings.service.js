@@ -3,6 +3,7 @@ const { httpError } = require('../middleware/errors');
 const v = require('../utils/validate');
 const { cleanRichText } = require('../utils/richText');
 const Settings = require('../models/settings');
+const Media = require('../models/media');
 const img = require('../utils/image');
 const { uploadToImgbb } = require('../utils/imgbb');
 
@@ -40,10 +41,11 @@ function internalLink(value, field) {
   return s;
 }
 
-function uploadUrl(value, field) {
+async function uploadUrl(value, field) {
   if (value === '' || value === null || value === undefined) return '';
   const s = String(value).trim();
-  if (!s.startsWith('/uploads/')) throw httpError(400, `${field} must come from the Media library.`);
+  const known = await Media.findByUrl(s);
+  if (!known) throw httpError(400, `${field} must come from the Media library.`);
   return s;
 }
 
@@ -73,7 +75,7 @@ async function updateMany(input, adminName) {
   }
   if (input.footer_text !== undefined) fields.footer_text = cleanRichText(input.footer_text, { field: 'Footer text', max: 200, optional: true });
   if (input.maintenance !== undefined) fields.maintenance = input.maintenance ? '1' : '0';
-  if (input.favicon !== undefined) fields.favicon = uploadUrl(input.favicon, 'Favicon');
+  if (input.favicon !== undefined) fields.favicon = await uploadUrl(input.favicon, 'Favicon');
   // Home page content
   if (input.home_title !== undefined) fields.home_title = v.str(input.home_title, { field: 'Home title', max: 60 });
   if (input.home_accent !== undefined) fields.home_accent = v.cleanText(input.home_accent, { field: 'Home accent', max: 60, optional: true });
@@ -82,7 +84,7 @@ async function updateMany(input, adminName) {
   if (input.home_primary_link !== undefined) fields.home_primary_link = internalLink(input.home_primary_link, 'Primary button link');
   if (input.home_secondary_label !== undefined) fields.home_secondary_label = v.str(input.home_secondary_label, { field: 'Secondary button label', max: 40 });
   if (input.home_secondary_link !== undefined) fields.home_secondary_link = internalLink(input.home_secondary_link, 'Secondary button link');
-  if (input.home_banner !== undefined) fields.home_banner = uploadUrl(input.home_banner, 'Home banner');
+  if (input.home_banner !== undefined) fields.home_banner = await uploadUrl(input.home_banner, 'Home banner');
   await Settings.setMany(Object.entries(fields));
   return { ok: true, updated: Object.keys(fields), by: adminName };
 }

@@ -3,6 +3,7 @@ const { httpError } = require('../middleware/errors');
 const v = require('../utils/validate');
 const { cleanRichText } = require('../utils/richText');
 const Articles = require('../models/articles');
+const Media = require('../models/media');
 
 const CATEGORIES = ['general', 'heroes', 'city', 'resources', 'combat', 'alliance', 'events', 'formations', 'equipment', 'f2p'];
 
@@ -31,7 +32,7 @@ async function create(input) {
   const tags = v.cleanText(tagsInput(input.tags) || '', { field: 'Tags', max: 120, optional: true });
   const published = Boolean(input.published);
   const cover = typeof input.cover === 'string' && input.cover.trim() ? input.cover.trim() : null;
-  if (cover && !cover.startsWith('/uploads/')) throw httpError(400, 'Tip image must come from the Media library.');
+  if (cover && !(await Media.findByUrl(cover))) throw httpError(400, 'Tip image must come from the Media library.');
   return await Articles.create({ title, category, body, tags, published, cover });
 }
 
@@ -50,7 +51,7 @@ async function update(id, input) {
   }
   if (input.cover !== undefined) {
     fields.cover = input.cover ? String(input.cover).trim() : null;
-    if (fields.cover && !fields.cover.startsWith('/uploads/')) throw httpError(400, 'Tip image must come from the Media library.');
+    if (fields.cover && !(await Media.findByUrl(fields.cover))) throw httpError(400, 'Tip image must come from the Media library.');
   }
   const row = await Articles.update(id, fields);
   return asTags(row);

@@ -22,15 +22,21 @@ function errorHandler(err, req, res, next) {
     status = 400;
     message = 'Invalid JSON body.';
   } else {
-    message = status < 500 ? err.message : 'Something went wrong on our side. Please try again.';
+    // Some 5xx errors are operational (a misconfigured integration, an
+    // upstream service failing) rather than bugs — those are marked with
+    // expose:true by whoever threw them so admins can actually see and act
+    // on the real reason, instead of always getting the generic fallback.
+    const expose = err.expose !== undefined ? err.expose : status < 500;
+    message = expose ? err.message : 'Something went wrong on our side. Please try again.';
   }
   if (status >= 500) console.error('[error]', err);
   res.status(status).json({ error: message });
 }
 
-function httpError(status, message) {
+function httpError(status, message, opts = {}) {
   const err = new Error(message);
   err.status = status;
+  if (opts.expose !== undefined) err.expose = opts.expose;
   return err;
 }
 
