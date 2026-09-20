@@ -526,7 +526,7 @@ main, .site-footer { position: relative; z-index: 1; }
 }
 .drawer-lang .lang-switch { font-size: 12px; padding: 7px 14px; }
 .drawer-lang .lang-switch-icon { width: 13px; height: 13px; }
-.drawer-lang .lang-switch-widget select.goog-te-combo { font-size: 12px; max-width: 110px; }
+.drawer-lang .lang-switch-select { font-size: 12px; max-width: 130px; }
 
 @media (max-width: 1500px) {
   .main-nav a { padding: 6px 10px; font-size: 12px; }
