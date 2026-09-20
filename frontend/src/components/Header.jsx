@@ -151,6 +151,9 @@ export default function Header() {
               {item.label}
             </NavLink>
           ))}
+          <div className="drawer-lang">
+            <LanguageSwitcher />
+          </div>
         </nav>
       ) : null}
     </>

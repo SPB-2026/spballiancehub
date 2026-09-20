@@ -216,16 +216,16 @@ html.theme-transition *::after {
 
 /* ── 5b. LANGUAGE SWITCHER (Google Website Translator, restyled) */
 .lang-switch {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 7px 13px; border-radius: 999px;
-  font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 999px;
+  font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
   color: var(--text-2); white-space: nowrap;
   background: rgba(148, 163, 184, 0.07);
   border: 1px solid rgba(168, 179, 194, 0.16);
   position: relative;
 }
 .lang-switch:hover { color: var(--text-1); border-color: var(--gold-dim); background: var(--gold-faint); }
-.lang-switch-icon { width: 14px; height: 14px; flex-shrink: 0; }
+.lang-switch-icon { width: 12px; height: 12px; flex-shrink: 0; }
 :root[data-theme='day'] .lang-switch { background: rgba(29, 36, 54, 0.05); border-color: rgba(29, 36, 54, 0.14); }
 :root[data-theme='day'] .lang-switch:hover { background: rgba(184, 137, 31, 0.1); border-color: var(--gold-dim); color: var(--text-1); }
 @media (max-width: 700px) {
@@ -243,9 +243,14 @@ html.theme-transition *::after {
   display: none !important;
 }
 .lang-switch-widget select.goog-te-combo {
-  font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+  font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
   color: var(--text-2); background: transparent; border: none; outline: none;
-  cursor: pointer; max-width: 92px;
+  cursor: pointer; max-width: 72px;
+}
+/* On phones the header row is tight; the widget moves into the pull-down
+   nav drawer instead (see .drawer-lang), so hide the header's copy here. */
+@media (max-width: 700px) {
+  .header-right > .lang-switch { display: none; }
 }
 /* Google's floating banner/balloon iframes and the body offset it applies
    are not used by our inline SIMPLE layout — hide them so nothing flashes
