@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MediaPickerModal } from './MediaPicker.jsx';
-import { IconImage } from './icons.jsx';
+import { IconImage, IconLink } from './icons.jsx';
 
 // Preset swatches matching the site's own theme tokens (see global.css :root).
 // "Default" sets the exact readable text color explicitly (rather than
@@ -73,6 +73,21 @@ export default function RichTextEditor({ value, onChange, minHeight = 130, maxLe
     emit();
   }
 
+  function insertLink() {
+    const url = window.prompt('Link URL (e.g. https://example.com):', 'https://');
+    if (!url) return;
+    const trimmed = url.trim();
+    if (!trimmed || trimmed === 'https://') return;
+    editorRef.current?.focus();
+    document.execCommand('createLink', false, trimmed);
+    // Force the created link to open in a new tab — matches how links are
+    // sanitized/rendered everywhere else on the site.
+    const sel = window.getSelection();
+    const node = sel?.anchorNode?.parentElement?.closest('a');
+    if (node) { node.target = '_blank'; node.rel = 'noopener noreferrer'; }
+    emit();
+  }
+
   // The image-library modal steals focus/selection, so the current cursor
   // position has to be captured before it opens and restored before insert.
   function saveSelection() {
@@ -142,6 +157,9 @@ export default function RichTextEditor({ value, onChange, minHeight = 130, maxLe
           onChange={(e) => applyColor(e.target.value)}
         />
         <div className="rte-sep" aria-hidden="true" />
+        <button type="button" className="rte-btn" title="Insert link" onMouseDown={(e) => e.preventDefault()} onClick={insertLink}>
+          <IconLink />
+        </button>
         <button
           type="button"
           className="rte-btn"

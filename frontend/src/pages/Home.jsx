@@ -238,6 +238,7 @@ export default function Home() {
 function EventMiniCard({ event, isNext = false }) {
   return (
     <div className={`card card-pad card-hover event-card${isNext ? ' event-card-next' : ''}`}>
+      {event.image ? <div className="news-cover"><img src={event.image} alt="" loading="lazy" /></div> : null}
       <div className="event-top">
         <div>
           <h3 className="event-title">{event.title}</h3>
@@ -253,7 +254,7 @@ function EventMiniCard({ event, isNext = false }) {
       </div>
       <div className="event-foot">
         <Countdown targetIso={event.status === 'ongoing' ? event.ends_at : event.starts_at} label={event.status === 'ongoing' ? 'ends' : 'in'} />
-        <span className="text-dim" style={{ fontSize: 12 }}>{event.description ? `${event.description.length > 80 ? event.description.slice(0, 80) + '…' : event.description}` : ''}</span>
+        <span className="text-dim" style={{ fontSize: 12 }}>{event.description ? excerptText(event.description, 80) : ''}</span>
       </div>
     </div>
   );

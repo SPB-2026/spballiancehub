@@ -92,6 +92,10 @@
   background: linear-gradient(170deg, rgba(247, 249, 252, 0.92), rgba(238, 241, 248, 0.85));
   border-color: rgba(29, 36, 54, 0.22);
 }
+:root[data-theme='day'] .countdown .cd-box {
+  background: linear-gradient(170deg, rgba(247, 249, 252, 0.95), rgba(236, 239, 246, 0.9));
+  border-color: rgba(29, 36, 54, 0.16);
+}
 
 /* Buttons */
 :root[data-theme='day'] .btn-ghost { background: rgba(29, 36, 54, 0.05); border-color: rgba(29, 36, 54, 0.18); }
@@ -209,6 +213,46 @@ html.theme-transition *::after {
 }
 /* (The global prefers-reduced-motion rule in global.css already reduces
    these durations to 0.01ms for users with reduced motion enabled.) */
+
+/* ── 5b. LANGUAGE SWITCHER (Google Website Translator, restyled) */
+.lang-switch {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 13px; border-radius: 999px;
+  font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--text-2); white-space: nowrap;
+  background: rgba(148, 163, 184, 0.07);
+  border: 1px solid rgba(168, 179, 194, 0.16);
+  position: relative;
+}
+.lang-switch:hover { color: var(--text-1); border-color: var(--gold-dim); background: var(--gold-faint); }
+.lang-switch-icon { width: 14px; height: 14px; flex-shrink: 0; }
+:root[data-theme='day'] .lang-switch { background: rgba(29, 36, 54, 0.05); border-color: rgba(29, 36, 54, 0.14); }
+:root[data-theme='day'] .lang-switch:hover { background: rgba(184, 137, 31, 0.1); border-color: var(--gold-dim); color: var(--text-1); }
+@media (max-width: 700px) {
+  .lang-switch { padding: 7px 10px; }
+  .lang-switch-label { display: none; }
+}
+
+/* Google injects its own markup into .lang-switch-widget — hide its default
+   chrome (branding link/logo, "Powered by" text, the icon it prepends) and
+   restyle the actual <select> to look like a native part of this pill. */
+.lang-switch-widget .goog-te-gadget { font-size: 0; color: transparent; }
+.lang-switch-widget .goog-te-gadget > span > a,
+.lang-switch-widget .goog-logo-link,
+.lang-switch-widget .goog-te-gadget-icon {
+  display: none !important;
+}
+.lang-switch-widget select.goog-te-combo {
+  font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--text-2); background: transparent; border: none; outline: none;
+  cursor: pointer; max-width: 92px;
+}
+/* Google's floating banner/balloon iframes and the body offset it applies
+   are not used by our inline SIMPLE layout — hide them so nothing flashes
+   on screen or shifts the page down. */
+.goog-te-banner-frame.skiptranslate, iframe.goog-te-banner-frame { display: none !important; }
+.goog-te-balloon-frame { display: none !important; }
+body { top: 0 !important; }
 
 /* ── 6. THEME TOGGLE BUTTON (member + admin headers) */
 .theme-toggle {

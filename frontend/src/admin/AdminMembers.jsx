@@ -249,8 +249,8 @@ export default function AdminMembers() {
                   title="Enter the 9-digit Kingshot Game User ID"
                 />
               </Field>
-              <Field label="Email" id="m-email">
-                <input id="m-email" type="email" className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required maxLength={160} />
+              <Field label="Email" id="m-email" hint="Optional.">
+                <input id="m-email" type="email" className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} maxLength={160} />
               </Field>
               <Field label="Display name" id="m-name">
                 <input id="m-name" className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required maxLength={40} />

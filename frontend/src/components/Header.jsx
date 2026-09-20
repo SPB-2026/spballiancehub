@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useUtcClock, useLocalClock } from '../hooks/useClock.js';
 import { useTheme } from '../theme/theme.js';
+import LanguageSwitcher from './LanguageSwitcher.jsx';
 import {
   IconMenu, IconClose, IconGlobe, IconPin, IconClock,
   IconHome, IconUsers, IconCalendar, IconBulb, IconGift,
@@ -84,6 +85,8 @@ export default function Header() {
           </nav>
 
           <div className="header-right">
+            <LanguageSwitcher />
+
             <button
               type="button"
               className="theme-toggle"
