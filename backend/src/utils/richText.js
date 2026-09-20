@@ -17,6 +17,10 @@ const OPTIONS = {
   allowedStyles: {
     span: {
       color: [/^#[0-9a-fA-F]{3,8}$/, /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/],
+      'font-weight': [/^(bold|bolder|[1-9]00)$/],
+      'font-style': [/^italic$/],
+      'text-decoration': [/^underline$/],
+      'text-decoration-line': [/^underline$/],
     },
   },
   allowedSchemes: ['http', 'https'],

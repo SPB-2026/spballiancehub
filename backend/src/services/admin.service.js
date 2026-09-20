@@ -115,7 +115,9 @@ async function assertR5Available(targetId) {
 
 async function createMember(input) {
   const game_user_id = v.gameUserId(input.game_user_id); // exactly 9 digits
-  const email = v.str(input.email, { field: 'Email', max: 160 }).toLowerCase();
+  const emailRaw = v.str(input.email || '', { field: 'Email', max: 160, optional: true }).toLowerCase();
+  if (emailRaw && !EMAIL_RE.test(emailRaw)) throw httpError(400, 'Please enter a valid email address.');
+  const email = emailRaw || null;
   const name = v.str(input.name, { field: 'Display name', max: 40 });
   const role = v.oneOf(input.role || 'R1', ['R5', 'R4', 'R3', 'R2', 'R1'], 'Role');
   if (role === 'R5') await assertR5Available(null);
@@ -137,7 +139,11 @@ async function updateMember(id, input) {
   if (!existing) throw httpError(404, 'Member not found.');
   const fields = {};
   if (input.name !== undefined) fields.name = v.str(input.name, { field: 'Display name', max: 40 });
-  if (input.email !== undefined) fields.email = v.str(input.email, { field: 'Email', max: 160 }).toLowerCase();
+  if (input.email !== undefined) {
+    const emailRaw = v.str(input.email || '', { field: 'Email', max: 160, optional: true }).toLowerCase();
+    if (emailRaw && !EMAIL_RE.test(emailRaw)) throw httpError(400, 'Please enter a valid email address.');
+    fields.email = emailRaw || null;
+  }
   if (input.avatar !== undefined) {
     if (input.avatar === null || input.avatar === '') {
       fields.avatar = null;
