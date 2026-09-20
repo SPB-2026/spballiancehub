@@ -214,38 +214,6 @@ html.theme-transition *::after {
 /* (The global prefers-reduced-motion rule in global.css already reduces
    these durations to 0.01ms for users with reduced motion enabled.) */
 
-/* ── 5b. LANGUAGE SWITCHER (custom dropdown driving Google's translate
-   engine directly — see components/LanguageSwitcher.jsx for why) */
-.lang-switch {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 10px; border-radius: 999px;
-  font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
-  color: var(--text-2); white-space: nowrap;
-  background: rgba(148, 163, 184, 0.07);
-  border: 1px solid rgba(168, 179, 194, 0.16);
-  position: relative;
-}
-.lang-switch:hover { color: var(--text-1); border-color: var(--gold-dim); background: var(--gold-faint); }
-.lang-switch-icon { width: 12px; height: 12px; flex-shrink: 0; }
-.lang-switch-select {
-  font-family: inherit; font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
-  color: inherit; background: transparent; border: none; outline: none;
-  cursor: pointer; max-width: 82px; appearance: none;
-}
-.lang-switch-select option { color: #1a1f29; font-weight: 500; letter-spacing: normal; }
-:root[data-theme='day'] .lang-switch { background: rgba(29, 36, 54, 0.05); border-color: rgba(29, 36, 54, 0.14); }
-:root[data-theme='day'] .lang-switch:hover { background: rgba(184, 137, 31, 0.1); border-color: var(--gold-dim); color: var(--text-1); }
-@media (max-width: 700px) {
-  /* On phones the header row is tight; the widget moves into the pull-down
-     nav drawer instead (see .drawer-lang), so hide the header's copy. */
-  .header-right > .lang-switch { display: none; }
-}
-/* Safety net: Google's own translate UI is never intentionally shown (this
-   component hides its trigger entirely and uses a custom <select> instead),
-   but force-hide its floating frames in case any ever slip through. */
-.goog-te-banner-frame, .goog-te-balloon-frame, .goog-te-menu-frame { display: none !important; }
-body { top: 0 !important; }
-
 /* ── 6. THEME TOGGLE BUTTON (member + admin headers) */
 .theme-toggle {
   display: inline-flex; align-items: center; gap: 7px;

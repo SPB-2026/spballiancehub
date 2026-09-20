@@ -519,15 +519,6 @@ main, .site-footer { position: relative; z-index: 1; }
 .drawer-logout:hover { background: rgba(208, 106, 106, 0.18); }
 .drawer-logout svg { width: 17px; height: 17px; }
 
-.drawer-lang {
-  margin-top: 10px; padding-top: 12px;
-  border-top: 1px solid rgba(168, 179, 194, 0.14);
-  display: flex; justify-content: center;
-}
-.drawer-lang .lang-switch { font-size: 12px; padding: 7px 14px; }
-.drawer-lang .lang-switch-icon { width: 13px; height: 13px; }
-.drawer-lang .lang-switch-select { font-size: 12px; max-width: 130px; }
-
 @media (max-width: 1500px) {
   .main-nav a { padding: 6px 10px; font-size: 12px; }
 }
