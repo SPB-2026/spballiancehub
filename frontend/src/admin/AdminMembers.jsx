@@ -5,12 +5,12 @@ import api from '../services/api.js';
 import AdminTable from './AdminTable.jsx';
 import { Button, Badge, Modal, Field, ConfirmDialog } from '../components/ui.jsx';
 import Avatar from '../components/Avatar.jsx';
-import { num, fmtDate } from '../utils/format.js';
-import { IconPlus, IconEdit, IconTrash, IconBolt, IconSearch } from '../components/icons.jsx';
+import { num, fmtDate, formatTownCenter } from '../utils/format.js';
+import { IconPlus, IconEdit, IconTrash, IconBolt, IconSearch, IconRefresh, IconUsers, IconCheck, IconClose } from '../components/icons.jsx';
 
 const EMPTY = {
   game_user_id: '', email: '', name: '', role: 'R1', status: 'active',
-  bio: '', contributions: 0, score: 0, join_date: new Date().toISOString().slice(0, 10),
+  bio: '', contributions: 0, score: 0, town_center: '', join_date: new Date().toISOString().slice(0, 10),
   avatar: '', photoFile: null, photoPreview: null,
 };
 
@@ -19,6 +19,10 @@ const ROLE_BADGE = { R5: 'gold', R4: 'gold', R3: 'blue', R2: 'gray', R1: 'gray' 
 export default function AdminMembers() {
   const toast = useToast();
   const { data, loading, error, reload } = useAsync(() => api.get('/admin/members'), []);
+  const { data: review, reload: reloadReview } = useAsync(() => api.get('/admin/mightpulse/review'), []);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [reviewBusy, setReviewBusy] = useState(false);
   const [editing, setEditing] = useState(null); // null | 'new' | member
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -37,7 +41,7 @@ export default function AdminMembers() {
   function openEdit(m) {
     setForm({
       game_user_id: m.game_user_id, email: m.email, name: m.name, role: m.role, status: m.status,
-      bio: m.bio || '', contributions: m.contributions, score: m.score, join_date: m.join_date,
+      bio: m.bio || '', contributions: m.contributions, score: m.score, town_center: m.town_center || '', join_date: m.join_date,
       avatar: m.avatar || '', photoFile: null, photoPreview: null,
     });
     setFormError('');
@@ -86,7 +90,7 @@ export default function AdminMembers() {
       if (editing === 'new') {
         const created = await api.post('/admin/members', payload);
         targetId = created?.id ?? created?.member?.id;
-        toast.success('Member added', `${form.name} can now sign in with their Game User ID and email.`);
+        toast.success('Member added', `${form.name} was added to the roster.`);
       } else {
         await api.put(`/admin/members/${editing.id}`, payload);
         targetId = editing.id;
@@ -131,13 +135,97 @@ export default function AdminMembers() {
     }
   }
 
+  async function syncNow() {
+    setSyncing(true);
+    try {
+      const result = await api.post('/admin/mightpulse/sync');
+      toast.success('Sync complete', `${result.updated} updated · ${result.queued} new found · ${result.flagged} flagged as possibly left.`);
+      reload();
+      reloadReview();
+    } catch (err) {
+      toast.error('Sync failed', err.message);
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  async function approveOne(id) {
+    setReviewBusy(true);
+    try {
+      await api.post(`/admin/mightpulse/pending/${id}/approve`);
+      reload();
+      reloadReview();
+    } catch (err) {
+      toast.error('Add failed', err.message);
+    } finally {
+      setReviewBusy(false);
+    }
+  }
+
+  async function approveAll() {
+    setReviewBusy(true);
+    try {
+      const result = await api.post('/admin/mightpulse/pending/approve-all');
+      const addedCount = result.created?.length ?? 0;
+      const failedCount = result.failed?.length ?? 0;
+      if (failedCount > 0) {
+        toast.error('Some members failed', `${addedCount} added, ${failedCount} failed — they remain in the pending list.`);
+      } else {
+        toast.success('Members added', `${addedCount} member${addedCount === 1 ? '' : 's'} added to your roster.`);
+      }
+      reload();
+      reloadReview();
+    } catch (err) {
+      toast.error('Bulk add failed', err.message);
+    } finally {
+      setReviewBusy(false);
+    }
+  }
+
+  async function ignoreOne(id) {
+    setReviewBusy(true);
+    try {
+      await api.del(`/admin/mightpulse/pending/${id}`);
+      reloadReview();
+    } catch (err) {
+      toast.error('Failed', err.message);
+    } finally {
+      setReviewBusy(false);
+    }
+  }
+
+  async function dismissMissing(id) {
+    setReviewBusy(true);
+    try {
+      await api.post(`/admin/mightpulse/missing/${id}/dismiss`);
+      toast.info('Cleared', 'No longer flagged as possibly left.');
+      reload();
+      reloadReview();
+    } catch (err) {
+      toast.error('Failed', err.message);
+    } finally {
+      setReviewBusy(false);
+    }
+  }
+
+  const pendingCount = review?.pending?.length || 0;
+  const missingCount = review?.missing?.length || 0;
+  const reviewCount = pendingCount + missingCount;
+
   const columns = [
     {
       key: 'member', label: 'Member', render: (m) => (
         <div className="flex items-center gap-1">
           <Avatar src={m.avatar} name={m.name} size={30} />
           <div>
-            <div style={{ fontWeight: 600 }}>{m.name}</div>
+            <div style={{ fontWeight: 600 }}>
+              {m.name}
+              {m.mp_missing ? (
+                <span style={{ marginLeft: 6, display: 'inline-block' }}>
+                  <Badge kind="red">Left?</Badge>
+                </span>
+              ) : null}
+            </div>
             <div className="text-dim" style={{ fontSize: 11.5 }}>{m.bio ? m.bio.slice(0, 40) : '—'}</div>
           </div>
         </div>
@@ -161,6 +249,7 @@ export default function AdminMembers() {
     },
     { key: 'contributions', label: 'Contributions', align: 'right', render: (m) => <span className="mono">{num(m.contributions)}</span> },
     { key: 'score', label: 'Power', align: 'right', render: (m) => <span className="mono">{num(m.score)}</span> },
+    { key: 'town_center', label: 'Town Center', align: 'right', render: (m) => <span className="mono">{formatTownCenter(m.town_center) || '—'}</span> },
     { key: 'join_date', label: 'Joined', render: (m) => <span className="mono" style={{ fontSize: 12.5 }}>{fmtDate(m.join_date)}</span> },
     {
       key: 'actions', label: '', align: 'right', render: (m) => (
@@ -202,9 +291,22 @@ export default function AdminMembers() {
               aria-label="Search members"
             />
           </div>
+          <Button variant="ghost" icon={<IconRefresh />} loading={syncing} onClick={syncNow}>Sync now</Button>
           <Button icon={<IconPlus />} onClick={openNew}>Add member</Button>
         </div>
       </div>
+
+      {reviewCount > 0 ? (
+        <button type="button" className="mp-review-banner" onClick={() => setReviewOpen(true)}>
+          <IconUsers size={16} />
+          <span>
+            {pendingCount > 0 ? <><b>{pendingCount}</b> new member{pendingCount === 1 ? '' : 's'} found</> : null}
+            {pendingCount > 0 && missingCount > 0 ? ' · ' : null}
+            {missingCount > 0 ? <><b>{missingCount}</b> flagged as possibly left</> : null}
+          </span>
+          <span className="mp-review-banner-cta">Review →</span>
+        </button>
+      ) : null}
 
       <AdminTable
         columns={columns}
@@ -214,7 +316,7 @@ export default function AdminMembers() {
         onRetry={reload}
         emptyIcon="🛡️"
         emptyTitle={query ? 'No members match your search' : 'No members yet'}
-        emptyText={query ? `Nothing found for “${query}”.` : 'Add your first member with their Game User ID and email.'}
+        emptyText={query ? `Nothing found for “${query}”.` : 'Add your first member with their Game User ID.'}
       />
       {!query && data ? (
         <p className="text-dim mt-1" style={{ fontSize: 12.5 }}>
@@ -274,6 +376,9 @@ export default function AdminMembers() {
               <Field label="Power" id="m-score" hint="Alliance Power — decides the order within each rank.">
                 <input id="m-score" type="number" min="0" max="100000000000" className="input" value={form.score} onChange={(e) => setForm({ ...form, score: e.target.value })} />
               </Field>
+              <Field label="Town Center" id="m-tc" hint="Level (1–30), or the Truegold tier number past 30 (e.g. 35 = TG5). Kept in sync automatically once matched via MightPulse.">
+                <input id="m-tc" type="number" min="0" max="60" className="input" value={form.town_center} onChange={(e) => setForm({ ...form, town_center: e.target.value })} />
+              </Field>
             </div>
             <Field label="Public bio" id="m-bio">
               <textarea id="m-bio" className="textarea" value={form.bio} maxLength={300} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
@@ -290,6 +395,62 @@ export default function AdminMembers() {
             </Field>
             {formError ? <div className="form-error">{formError}</div> : null}
           </form>
+        </Modal>
+      ) : null}
+
+      {reviewOpen ? (
+        <Modal
+          title="Review MightPulse changes"
+          onClose={() => setReviewOpen(false)}
+          wide
+          footer={<Button variant="ghost" onClick={() => setReviewOpen(false)}>Close</Button>}
+        >
+          {pendingCount > 0 ? (
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-1">
+                <h3 style={{ margin: 0, fontSize: 15 }}>New members found ({pendingCount})</h3>
+                <Button size="sm" loading={reviewBusy} onClick={approveAll}>Add all {pendingCount}</Button>
+              </div>
+              <div className="mp-review-list">
+                {review.pending.map((p) => (
+                  <div className="mp-review-row" key={p.id}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{p.nick_name}</div>
+                      <div className="text-dim" style={{ fontSize: 12 }}>
+                        ID {p.governor_id} · {p.alliance_rank || 'R1'} · Power {num(p.power)} · TC {formatTownCenter(p.town_center) || '—'}
+                      </div>
+                    </div>
+                    <div className="row-actions">
+                      <button className="btn btn-gold btn-sm" disabled={reviewBusy} onClick={() => approveOne(p.id)} title="Add to roster"><IconCheck size={14} /> Add</button>
+                      <button className="btn btn-ghost btn-sm" disabled={reviewBusy} onClick={() => ignoreOne(p.id)} title="Ignore"><IconClose size={14} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {missingCount > 0 ? (
+            <div>
+              <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>Possibly left the alliance ({missingCount})</h3>
+              <div className="mp-review-list">
+                {review.missing.map((m) => (
+                  <div className="mp-review-row" key={m.id}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{m.name}</div>
+                      <div className="text-dim" style={{ fontSize: 12 }}>ID {m.game_user_id} · no longer seen in the in-game roster</div>
+                    </div>
+                    <div className="row-actions">
+                      <button className="btn btn-ghost btn-sm" disabled={reviewBusy} onClick={() => dismissMissing(m.id)} title="Still here — clear this flag">Still here</button>
+                      <button className="btn btn-danger btn-sm" disabled={reviewBusy} onClick={() => { setReviewOpen(false); setConfirm(m); }} title="Remove from roster"><IconTrash size={14} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {reviewCount === 0 ? <p className="text-dim">Nothing to review.</p> : null}
         </Modal>
       ) : null}
 

@@ -4,8 +4,7 @@ import api from '../services/api.js';
 import { LoadingBox, EmptyState, ErrorState } from '../components/ui.jsx';
 import Avatar from '../components/Avatar.jsx';
 import Emblem from '../components/Emblem.jsx';
-import { IconBolt } from '../components/icons.jsx';
-import { num, fmtDate } from '../utils/format.js';
+import { num, formatTownCenter } from '../utils/format.js';
 
 const ROLE_LABEL = { R5: 'R5', R4: 'R4', R3: 'R3', R2: 'R2', R1: 'R1' };
 
@@ -49,9 +48,11 @@ export default function Members() {
                 <div className="mr-id">
                   <span className="mr-role">{ROLE_LABEL[m.role] || m.role}</span>
                   <span className="mr-name">{m.name}</span>
-                  <span className="mr-contrib" title={`${num(m.contributions)} contributions`}>
-                    <IconBolt /> {num(m.contributions)} contributions
-                  </span>
+                  {formatTownCenter(m.town_center) ? (
+                    <span className="mr-tc" title="Town Center">
+                      Town Center {formatTownCenter(m.town_center)}
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="mr-score">
@@ -61,7 +62,6 @@ export default function Members() {
 
                 <div className="mr-status">
                   <span className={`mr-pill st-${m.status}`}>{m.status}</span>
-                  <span className="mr-since">Since {fmtDate(m.join_date, { year: 'numeric', month: 'short' })}</span>
                 </div>
               </div>
             );

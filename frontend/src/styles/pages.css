@@ -327,8 +327,7 @@
 .mr-role:hover { color: var(--gold-bright); }
 .mr-name { font-size: 18px; font-weight: 700; color: var(--text-1); text-decoration: none !important; }
 .mr-name:hover { color: var(--gold-bright); }
-.mr-contrib { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
-.mr-contrib svg { width: 13px; height: 13px; color: var(--gold-bright); flex-shrink: 0; }
+.mr-tc { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-3); }
 
 .mr-score { flex-shrink: 0; text-align: right; min-width: 140px; }
 .mr-score-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-3); }
@@ -344,7 +343,6 @@
 .mr-pill.st-active { color: var(--green); border-color: rgba(76, 175, 125, 0.4); background: rgba(76, 175, 125, 0.08); }
 .mr-pill.st-inactive { color: var(--text-3); }
 .mr-pill.st-banned { color: var(--red); border-color: rgba(208, 106, 106, 0.4); background: rgba(208, 106, 106, 0.08); }
-.mr-since { font-size: 10.5px; color: var(--gold); }
 
 .mr-action { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 150px; }
 .btn-soft {

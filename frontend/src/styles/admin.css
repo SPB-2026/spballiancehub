@@ -49,6 +49,26 @@
 .admin-page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
 .admin-page-head h1 { font-size: 26px; letter-spacing: 0.01em; }
 .admin-page-head p { color: var(--text-3); font-size: 13.5px; margin-top: 4px; }
+
+.mp-review-banner {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  margin: -12px 0 20px; padding: 11px 16px; border-radius: 12px;
+  background: var(--gold-faint); border: 1px solid var(--gold-dim);
+  color: var(--text-1); font-size: 13.5px; text-align: left; cursor: pointer;
+  transition: background 0.14s var(--ease);
+}
+.mp-review-banner:hover { background: rgba(212, 175, 55, 0.16); }
+.mp-review-banner svg { color: var(--gold); flex-shrink: 0; }
+.mp-review-banner b { color: var(--gold-bright); }
+.mp-review-banner-cta { margin-left: auto; font-weight: 700; color: var(--gold); white-space: nowrap; }
+
+.mp-review-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+.mp-review-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(148, 163, 184, 0.05); border: 1px solid rgba(168, 179, 194, 0.14);
+}
+.mp-review-row .row-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .admin-main { animation: pageIn 0.28s var(--ease) both; }
 
 .row-actions { display: flex; gap: 6px; justify-content: flex-end; }

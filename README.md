@@ -138,6 +138,7 @@ See [`.env.example`](.env.example). Highlights:
 - `SEED_ADMIN_PASSWORD` — bootstrap admin password (used only on first setup)
 - `GIFT_CODE_FETCH_INTERVAL` — how often the Kingshot gift-code fetcher checks its sources (seconds, default 21600 = 6h, min 3600). In-process scheduler; restart to apply.
 - `IMGBB_API_KEY` — **required for image uploads.** Free key from [api.imgbb.com](https://api.imgbb.com). All uploaded images (avatars, news/event covers, logo, media library) are hosted on ImgBB rather than the local filesystem, so they survive redeploys on hosts with an ephemeral disk (e.g. Render's free tier).
+- `MIGHTPULSE_API_KEY`, `MP_KINGDOM_ID`, `MP_ALLIANCE_TAG` — **optional; enables automatic member roster syncing.** [MightPulse](https://www.mightpulse.com) is an independent, community-run Kingshot data tracker (not an official Century Games API) — sign in with Discord at [api.mightpulse.com](https://api.mightpulse.com) for a free key. When set, a background job periodically refreshes existing members' Power, Town Center, and Role directly from the game. New members found in the in-game roster, and existing members no longer found there, are never added or removed automatically — both always wait in Admin → Members for a one-click approval, so a bad API response or a temporary absence can't silently change your roster. `MP_SYNC_INTERVAL` controls how often this runs (seconds, default 6h, minimum 1h). Leaving these unset simply disables the sync — manual member management works exactly as before.
 
 ## Automatic gift-code fetcher (Kingshot)
 
