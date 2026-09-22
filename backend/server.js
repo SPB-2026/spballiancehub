@@ -2,6 +2,7 @@
 const env = require('./src/config/env');
 const app = require('./src/app');
 const { startGiftFetchJobs } = require('./src/jobs/giftCodeFetch');
+const { startMightPulseSyncJob } = require('./src/jobs/mightpulseSync');
 const db = require('./src/config/db');
 
 // Reaching here means the PostgreSQL pool was created successfully
@@ -34,6 +35,7 @@ async function start() {
   });
 
   startGiftFetchJobs();
+  startMightPulseSyncJob();
 
   const shutdown = (signal) => {
     console.log(`[spb] ${signal} — shutting down…`);

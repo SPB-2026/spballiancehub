@@ -12,6 +12,7 @@ const NewsModel = require('../models/news');
 const ArticleService = require('../services/article.service');
 const ArticleModel = require('../models/articles');
 const GiftService = require('../services/gift.service');
+const MightPulseService = require('../services/mightpulse.service');
 
 // Route-level guard: /:id must be a positive integer (prevents 500s on
 // malformed paths like /gifts/sources-before-ordering or /gifts/12abc).
@@ -36,6 +37,19 @@ router.post('/members', asyncHandler(async (req, res) => res.status(201).json(aw
 router.put('/members/:id', asyncHandler(async (req, res) => res.json(await AdminService.updateMember(Number(req.params.id), req.body || {}))));
 router.delete('/members/:id', asyncHandler(async (req, res) => res.json(await AdminService.removeMember(Number(req.params.id)))));
 router.post('/members/:id/reset-stats', asyncHandler(async (req, res) => res.json(await AdminService.resetMemberStats(Number(req.params.id)))));
+
+// ── MightPulse roster sync ──────────────────────────────────────────────────
+// Stat updates (power, Town Center, role) for existing members apply
+// automatically; new/missing members always wait here for admin approval.
+router.post('/mightpulse/sync', asyncHandler(async (req, res) => res.json(await MightPulseService.runSync())));
+router.get('/mightpulse/review', asyncHandler(async (req, res) => {
+  const [pending, missing] = await Promise.all([MightPulseService.listPending(), MightPulseService.listMissing()]);
+  res.json({ pending, missing });
+}));
+router.post('/mightpulse/pending/:id/approve', asyncHandler(async (req, res) => res.json(await MightPulseService.approvePending(Number(req.params.id)))));
+router.post('/mightpulse/pending/approve-all', asyncHandler(async (req, res) => res.json(await MightPulseService.approveAllPending())));
+router.delete('/mightpulse/pending/:id', asyncHandler(async (req, res) => res.json(await MightPulseService.dismissPending(Number(req.params.id)))));
+router.post('/mightpulse/missing/:id/dismiss', asyncHandler(async (req, res) => res.json(await MightPulseService.dismissMissing(Number(req.params.id)))));
 
 // ── Events / Calendar ───────────────────────────────────────────────────────
 router.get('/events', asyncHandler(async (req, res) => res.json(await EventService.adminList())));

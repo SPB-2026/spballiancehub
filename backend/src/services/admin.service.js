@@ -125,9 +125,10 @@ async function createMember(input) {
   const bio = v.cleanText(input.bio || '', { field: 'Bio', max: 300, optional: true });
   const contributions = v.int(input.contributions, { field: 'Contributions', min: 0, max: 100000000, optional: true });
   const score = v.int(input.score, { field: 'Power', min: 0, max: 100000000000, optional: true });
+  const town_center = v.int(input.town_center, { field: 'Town Center', min: 0, max: 100, optional: true }) || null;
   const join_date = input.join_date ? v.isoDateTime(input.join_date, { field: 'Join date', optional: true }).slice(0, 10) : new Date().toISOString().slice(0, 10);
   try {
-    return await Members.create({ game_user_id, email, name, role, status, bio, contributions, score, join_date });
+    return await Members.create({ game_user_id, email, name, role, status, bio, contributions, score, town_center, join_date });
   } catch (err) {
     if (String(err.message).includes('UNIQUE')) throw httpError(409, 'A member with that Game User ID or email already exists.');
     throw err;
@@ -162,6 +163,7 @@ async function updateMember(id, input) {
   if (input.bio !== undefined) fields.bio = v.cleanText(input.bio, { field: 'Bio', max: 300, optional: true });
   if (input.contributions !== undefined) fields.contributions = v.int(input.contributions, { field: 'Contributions', min: 0, max: 100000000 });
   if (input.score !== undefined) fields.score = v.int(input.score, { field: 'Power', min: 0, max: 100000000000 });
+  if (input.town_center !== undefined) fields.town_center = input.town_center === '' || input.town_center === null ? null : v.int(input.town_center, { field: 'Town Center', min: 0, max: 100 });
   if (input.join_date !== undefined) fields.join_date = v.isoDateTime(input.join_date, { field: 'Join date', optional: true }).slice(0, 10);
   try {
     return await Members.update(id, fields);

@@ -2,7 +2,7 @@ const db = require('../config/db');
 
 // Fields safe for other members to see. Private fields (game_user_id, email)
 // are only returned by the admin-facing queries in admin.service.
-const PUBLIC = `id, name, avatar, role, status, bio, contributions, score, join_date, last_active`;
+const PUBLIC = `id, name, avatar, role, status, bio, contributions, score, town_center, join_date, last_active, mp_missing`;
 
 // Display order: rank first (R5 → R1), then power (score) high → low within
 // the rank, then name.
@@ -10,6 +10,7 @@ const RANK_ORDER = `CASE role WHEN 'R5' THEN 1 WHEN 'R4' THEN 2 WHEN 'R3' THEN 3
 
 module.exports = {
   findById: async (id) => db.prepare(`SELECT * FROM members WHERE id = ?`).get(id),
+  findByGameUserId: async (gid) => db.prepare(`SELECT * FROM members WHERE game_user_id = ?`).get(gid),
   publicById: async (id) => db.prepare(`SELECT ${PUBLIC} FROM members WHERE id = ?`).get(id),
   async listPublic() {
     return db.prepare(`SELECT ${PUBLIC} FROM members ORDER BY ${RANK_ORDER}, score DESC, name`).all();
@@ -17,17 +18,17 @@ module.exports = {
   async listAll() {
     return db.prepare(`SELECT * FROM members ORDER BY ${RANK_ORDER}, score DESC, name`).all();
   },
-  async create({ game_user_id, email, name, role, status, bio, contributions, score, join_date }) {
+  async create({ game_user_id, email, name, role, status, bio, contributions, score, town_center, join_date }) {
     const info = await db
       .prepare(
-        `INSERT INTO members (game_user_id, email, name, role, status, bio, contributions, score, join_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO members (game_user_id, email, name, role, status, bio, contributions, score, town_center, join_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
-      .run(game_user_id, email, name, role || 'R1', status || 'active', bio || '', contributions || 0, score || 0, join_date);
+      .run(game_user_id, email, name, role || 'R1', status || 'active', bio || '', contributions || 0, score || 0, town_center || null, join_date);
     return db.prepare(`SELECT * FROM members WHERE id = ?`).get(info.lastInsertRowid);
   },
   async update(id, fields) {
-    const allowed = ['name', 'avatar', 'role', 'status', 'bio', 'contributions', 'score', 'join_date', 'game_user_id', 'email', 'last_active'];
+    const allowed = ['name', 'avatar', 'role', 'status', 'bio', 'contributions', 'score', 'town_center', 'join_date', 'game_user_id', 'email', 'last_active', 'mp_missing', 'mp_last_synced_at'];
     const sets = [];
     const values = [];
     for (const key of allowed) {

@@ -75,6 +75,18 @@ const env = {
   // library, logo, favicon) so they survive redeploys on hosts with an
   // ephemeral filesystem. Get a free key at https://api.imgbb.com.
   IMGBB_API_KEY: process.env.IMGBB_API_KEY || '',
+
+  // MightPulse API key used to sync the member roster (power, Town Center,
+  // alliance rank) from the game. Get a free key at https://api.mightpulse.com
+  // (sign in with Discord). MP_KINGDOM_ID and MP_ALLIANCE_TAG identify which
+  // alliance to pull — these can also be set from Admin → Settings instead,
+  // which takes priority if both are present.
+  MIGHTPULSE_API_KEY: process.env.MIGHTPULSE_API_KEY || '',
+  MP_KINGDOM_ID: process.env.MP_KINGDOM_ID || '',
+  MP_ALLIANCE_TAG: process.env.MP_ALLIANCE_TAG || '',
+
+  // How often the automatic MightPulse roster sync runs, in seconds.
+  MP_SYNC_INTERVAL: parseInt(process.env.MP_SYNC_INTERVAL || String(6 * 60 * 60), 10),
 };
 
 module.exports = env;
