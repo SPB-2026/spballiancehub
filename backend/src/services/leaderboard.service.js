@@ -7,7 +7,7 @@ async function rows(metric = 'score') {
   return (
     await db
       .prepare(
-        `SELECT m.id, m.name, m.avatar, m.role, m.status, m.contributions, m.score, m.join_date
+        `SELECT m.id, m.name, m.avatar, m.role, m.status, m.contributions, m.score, m.town_center, m.join_date
        FROM members m
        WHERE m.status = 'active'
        ORDER BY ${key} DESC, m.contributions DESC, m.name ASC

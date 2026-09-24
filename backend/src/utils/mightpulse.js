@@ -47,7 +47,7 @@ async function fetchAllianceRoster(kingdomId, tag) {
 function formatTownCenter(rawLevel) {
   const n = Number(rawLevel);
   if (!Number.isFinite(n) || n <= 0) return null;
-  return n > 30 ? `TG${n - 30}` : String(n);
+  return n > 30 ? `TG${n - 30}` : `Lv. ${n}`;
 }
 
 // MightPulse's alliance_rank_label uses game words ("Leader", "Officer",
