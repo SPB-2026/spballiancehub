@@ -28,6 +28,7 @@ export const IconSettings = (p) => <I {...p}><circle cx="12" cy="12" r="3" /><pa
 export const IconLogout = (p) => <I {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></I>;
 export const IconClock = (p) => <I {...p}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></I>;
 export const IconRefresh = (p) => <I {...p}><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" /></I>;
+export const IconTower = (p) => <I {...p}><path d="M5 21V10l2-2V5h2v2l1-1h4l1 1V5h2v3l2 2v11" /><path d="M9 21v-5h6v5" /><path d="M4 10h16" /></I>;
 export const IconChevronL = (p) => <I {...p}><path d="m15 18-6-6 6-6" /></I>;
 export const IconChevronR = (p) => <I {...p}><path d="m9 18 6-6-6-6" /></I>;
 export const IconPlus = (p) => <I {...p}><path d="M12 5v14M5 12h14" /></I>;

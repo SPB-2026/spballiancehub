@@ -60,6 +60,7 @@ async function copyText(text) {
 export default function GiftCodes() {
   const toast = useToast();
   const codes = useAsync(() => api.get('/gifts/list'), []);
+  const activeCodes = (codes.data || []).filter((g) => g.active && !g.expired && g.remaining > 0);
 
   const [code, setCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
@@ -117,23 +118,23 @@ export default function GiftCodes() {
       <div className="page-head">
         <div>
           <h1 className="page-title">Gift <span className="flourish">Codes</span></h1>
-          <p className="page-sub">Copy a verified code and enter it in Kingshot, or redeem an alliance code directly on your account.</p>
+          <p className="page-sub">Copy a verified, currently-active code and enter it in Kingshot.</p>
         </div>
       </div>
 
-      {/* Available codes */}
+      {/* Available codes — only ones members can actually still use */}
       <section className="section" style={{ marginTop: 0 }} aria-label="Available gift codes">
         <div className="section-head">
           <h2 className="section-title has-icon"><span className="st-icon" aria-hidden="true">🎁</span> Available Gift Codes</h2>
-          {codes.data ? <span className="view-all" style={{ cursor: 'default' }}>{codes.data.length} codes</span> : null}
+          {codes.data ? <span className="view-all" style={{ cursor: 'default' }}>{activeCodes.length} codes</span> : null}
         </div>
         {codes.loading ? <LoadingBox label="Loading gift codes…" /> :
           codes.error ? <ErrorState error={codes.error} onRetry={codes.reload} /> :
-          codes.data.length === 0 ? (
-            <EmptyState icon="🎁" title="No gift codes yet">The command will publish alliance codes here.</EmptyState>
+          activeCodes.length === 0 ? (
+            <EmptyState icon="🎁" title="No active gift codes right now">Check back soon — the command publishes new codes here as they go live.</EmptyState>
           ) : (
             <div className="grid grid-3">
-              {codes.data.map((g) => {
+              {activeCodes.map((g) => {
                 const st = statusOf(g);
                 const cp = copyState[g.id]; // 'copied' | 'failed' | undefined — this card's own state only
                 return (
@@ -171,32 +172,8 @@ export default function GiftCodes() {
           )}
       </section>
 
-      {/* Redeem widget — public, no login required */}
-      <section className="section" aria-label="Redeem a code">
-        <div className="section-head">
-          <h2 className="section-title has-icon"><span className="st-icon" aria-hidden="true">🔑</span> Redeem a Code</h2>
-        </div>
-        <div className="card card-gold gift-widget">
-          <span className="stat-icon" aria-hidden="true"><IconGift /></span>
-          <div className="gift-input-row">
-            <form onSubmit={redeem} style={{ display: 'flex', gap: 10, flex: 1, flexWrap: 'wrap' }}>
-              <input
-                className="input gift-input"
-                style={{ flex: 1, minWidth: 180 }}
-                placeholder="Enter code — e.g. SPB-START-25"
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                aria-label="Gift code"
-                maxLength={32}
-              />
-              <Button type="submit" loading={redeeming}>Redeem</Button>
-            </form>
-            {result ? (
-              <div className={result.ok ? 'form-success' : 'form-error'} role="status">{result.message}</div>
-            ) : null}
-          </div>
-        </div>
-      </section>
+      {/* Redeem widget — hidden until auto-redeem is decided on (see redeem()
+          above, kept intact and unused for now rather than deleted). */}
     </div>
   );
 }

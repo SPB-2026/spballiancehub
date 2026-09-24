@@ -14,12 +14,12 @@ export default function MediaPicker({ onPick, initial = '', label = 'Choose imag
     <>
       <div className="logo-preview" style={{ marginBottom: 6 }}>
         {initial ? <img src={initial} alt="Current image" /> : <span className="logo-default skeleton" aria-hidden="true" />}
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
           <Button type="button" variant="outline" size="sm" icon={<IconImage />} onClick={() => setOpen(true)}>
             {initial ? 'Change image' : label}
           </Button>
           {initial ? (
-            <button type="button" className="btn btn-ghost btn-sm mt-1" onClick={() => onPick('')}>Remove image</button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => onPick('')}>Remove image</button>
           ) : null}
         </div>
       </div>

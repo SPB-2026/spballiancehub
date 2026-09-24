@@ -82,7 +82,7 @@ export function excerptText(raw, max = 160) {
 export function formatTownCenter(rawLevel) {
   const n = Number(rawLevel);
   if (!Number.isFinite(n) || n <= 0) return null;
-  return n > 30 ? `TG${n - 30}` : String(n);
+  return n > 30 ? `TG${n - 30}` : `Lv. ${n}`;
 }
 
 export function num(n) {

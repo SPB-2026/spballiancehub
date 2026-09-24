@@ -329,10 +329,20 @@
 .mr-name:hover { color: var(--gold-bright); }
 .mr-tc { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-3); }
 
+/* Shared Town Center badge — small tower icon + either "Lv. XX" text or the
+   game's own TG1–TG8 badge image. Used on the Members page, Leaderboard,
+   and admin table. */
+.tc-badge { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.tc-badge-icon { color: var(--text-3); flex-shrink: 0; }
+.tc-badge-level { font-size: 13px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.tc-badge-tg { flex-shrink: 0; object-fit: contain; }
+
 .mr-score { flex-shrink: 0; text-align: right; min-width: 140px; }
 .mr-score-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-3); }
 .mr-score-label b { color: var(--gold-bright); font-weight: 700; }
 .mr-score-value { display: block; font-family: var(--font-display); font-size: clamp(17px, 4.6vw, 25px); font-weight: 700; color: var(--text-1); margin-top: 2px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.mr-tc-col { flex-shrink: 0; display: flex; align-items: center; justify-content: center; min-width: 84px; }
 
 .mr-status { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 96px; }
 .mr-pill {
@@ -358,8 +368,9 @@
   .member-row { flex-wrap: wrap; gap: 14px; }
   .mr-id { flex-basis: 100%; order: 1; }
   .mr-score { text-align: left; order: 2; }
-  .mr-status { order: 3; flex-direction: row; align-items: center; min-width: 0; }
-  .mr-action { order: 4; width: 100%; align-items: stretch; min-width: 0; }
+  .mr-tc-col { order: 3; justify-content: flex-start; min-width: 0; }
+  .mr-status { order: 4; flex-direction: row; align-items: center; min-width: 0; }
+  .mr-action { order: 5; width: 100%; align-items: stretch; min-width: 0; }
   .mr-action .btn-soft { width: 100%; }
   .mr-hint { text-align: center; }
 }
