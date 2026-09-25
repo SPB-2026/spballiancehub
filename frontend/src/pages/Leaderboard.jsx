@@ -40,7 +40,7 @@ export default function Leaderboard() {
                   <Avatar src={r.avatar} name={r.name} size={64} />
                   <div className="pod-name">{r.name}</div>
                   <div className="pod-score">{num(r.score)} points</div>
-                  <TownCenterBadge level={r.town_center} size={18} className="pod-tc" />
+                  <TownCenterBadge level={r.town_center} size={32} className="pod-tc" />
                 </div>
               );
             })}
@@ -67,7 +67,7 @@ export default function Leaderboard() {
                       </span>
                     </td>
                     <td className="mono">{num(r.score)}</td>
-                    <td><TownCenterBadge level={r.town_center} size={18} /></td>
+                    <td><TownCenterBadge level={r.town_center} size={26} /></td>
                     <td><Badge kind={r.role === 'R5' || r.role === 'R4' ? 'gold' : r.role === 'R3' ? 'blue' : 'gray'}>{r.role}</Badge></td>
                   </tr>
                 ))}

@@ -60,7 +60,7 @@ async function copyText(text) {
 export default function GiftCodes() {
   const toast = useToast();
   const codes = useAsync(() => api.get('/gifts/list'), []);
-  const activeCodes = (codes.data || []).filter((g) => g.active && !g.expired && g.remaining > 0);
+  const activeCodes = (codes.data || []).filter((g) => g.active && !g.expired);
 
   const [code, setCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
