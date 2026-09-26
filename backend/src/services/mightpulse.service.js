@@ -23,13 +23,6 @@ async function runSync() {
   const { kingdomId, tag } = await getConfig();
   const { members: roster } = await fetchAllianceRoster(kingdomId, tag);
 
-  // TEMPORARY DEBUG — remove once the Town Center field mapping is confirmed
-  // against real data. Logs one raw roster record so we can see MightPulse's
-  // actual field names/values directly rather than guessing from docs/search.
-  if (roster.length > 0) {
-    console.log('[mightpulse-debug] sample roster record:', JSON.stringify(roster[0], null, 2));
-  }
-
   const existing = await Members.listAll();
   const byGameId = new Map(existing.filter((m) => m.game_user_id).map((m) => [String(m.game_user_id), m]));
   const seenGameIds = new Set();

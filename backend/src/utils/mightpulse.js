@@ -44,10 +44,16 @@ async function fetchAllianceRoster(kingdomId, tag) {
 // Kingshot displays Town Center progress past level 30 as Truegold tiers
 // (TG1–TG8) rather than continuing the plain level number — see the
 // Truegold building system. Below level 30, show the plain level.
+// Confirmed against real in-game data: 1–30 shown as-is, 31–34 flatten to
+// "30", and from 35 onward each Truegold tier spans 5 raw levels (35–39 =
+// TG1, 40–44 = TG2, ... 55–59 = TG5, matching a confirmed real example).
 function formatTownCenter(rawLevel) {
   const n = Number(rawLevel);
   if (!Number.isFinite(n) || n <= 0) return null;
-  return n > 30 ? `TG${n - 30}` : `Lv. ${n}`;
+  if (n <= 30) return `Lv. ${n}`;
+  if (n <= 34) return 'Lv. 30';
+  const tier = Math.floor((n - 35) / 5) + 1;
+  return `TG${tier}`;
 }
 
 // MightPulse's alliance_rank_label uses game words ("Leader", "Officer",
