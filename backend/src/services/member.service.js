@@ -17,6 +17,7 @@ function publicView(row) {
     bio: row.bio,
     contributions: row.contributions,
     score: row.score,
+    town_center: row.town_center,
     join_date: row.join_date,
     last_active: row.last_active,
   };
