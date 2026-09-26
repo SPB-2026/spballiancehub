@@ -1,5 +1,6 @@
 import React from 'react';
 import { IconTower } from './icons.jsx';
+import { getTownCenterInfo } from '../utils/townCenter.js';
 import tg1 from '../assets/tg-1.png';
 import tg2 from '../assets/tg-2.png';
 import tg3 from '../assets/tg-3.png';
@@ -11,21 +12,27 @@ import tg8 from '../assets/tg-8.png';
 
 const TG_BADGES = [tg1, tg2, tg3, tg4, tg5, tg6, tg7, tg8];
 
-// Matches the game's own convention exactly: Town Center levels 1–30 show as
-// plain "Lv. XX" text; past level 30, Truegold tiers show the game's own
-// TG1–TG8 badge icon instead of a number (the tier cap rises with kingdom
-// age, currently up to TG8 kingdom-wide, TG10 on the oldest servers).
-export default function TownCenterBadge({ level, size = 20, className = '' }) {
-  const n = Number(level);
-  if (!Number.isFinite(n) || n <= 0) return null;
+// Matches the game's own convention exactly (see utils/townCenter.js for the
+// confirmed raw-level → display conversion): plain level number up to 30,
+// then the game's own TG badge icon for Truegold tiers. Tiers beyond the
+// icon set we have (rare — only the oldest servers reach it) fall back to
+// plain "TG9"/"TG10" text rather than showing a wrong icon.
+export default function TownCenterBadge({ level, size = 28, className = '' }) {
+  const info = getTownCenterInfo(level);
+  if (!info) return null;
 
-  if (n > 30) {
-    const tier = Math.min(n - 30, TG_BADGES.length);
-    const src = TG_BADGES[tier - 1];
+  if (info.kind === 'tg') {
+    const src = TG_BADGES[info.tier - 1];
     return (
-      <span className={`tc-badge ${className}`.trim()} title={`Town Center — Truegold ${tier}`}>
-        <IconTower className="tc-badge-icon" style={{ width: size, height: size }} />
-        <img src={src} alt={`TG${tier}`} className="tc-badge-tg" style={{ width: size, height: size }} />
+      <span className={`tc-badge ${className}`.trim()} title={`Town Center — Truegold ${info.tier}`}>
+        {src ? (
+          <img src={src} alt={`TG${info.tier}`} className="tc-badge-tg" style={{ width: size, height: size }} />
+        ) : (
+          <>
+            <IconTower className="tc-badge-icon" style={{ width: size, height: size }} />
+            <span className="tc-badge-level">TG{info.tier}</span>
+          </>
+        )}
       </span>
     );
   }
@@ -33,7 +40,7 @@ export default function TownCenterBadge({ level, size = 20, className = '' }) {
   return (
     <span className={`tc-badge ${className}`.trim()} title="Town Center level">
       <IconTower className="tc-badge-icon" style={{ width: size, height: size }} />
-      <span className="tc-badge-level">Lv. {n}</span>
+      <span className="tc-badge-level">Lv. {info.level}</span>
     </span>
   );
 }

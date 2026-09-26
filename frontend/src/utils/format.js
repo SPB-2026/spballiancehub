@@ -76,14 +76,9 @@ export function excerptText(raw, max = 160) {
   return `${plain.slice(0, max).trim()}…`;
 }
 
-// Mirrors backend/src/utils/mightpulse.js formatTownCenter — Kingshot shows
-// Town Center progress past level 30 as Truegold tiers (TG1–TG8), not a
-// continuing plain number.
-export function formatTownCenter(rawLevel) {
-  const n = Number(rawLevel);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return n > 30 ? `TG${n - 30}` : `Lv. ${n}`;
-}
+// Correct Town Center conversion lives in townCenter.js (confirmed against
+// real in-game data); re-exported here so existing imports keep working.
+export { formatTownCenter } from './townCenter.js';
 
 export function num(n) {
   if (n === null || n === undefined) return '—';
