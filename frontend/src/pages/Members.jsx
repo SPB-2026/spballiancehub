@@ -57,8 +57,9 @@ export default function Members() {
                 </div>
 
                 <div className="mr-tc-col">
-                  <span className="mr-tc"</span>
-                  <span TownCenterBadge level={m.town_center} size={40}</span>
+                  <span className="mr-tc">
+                    <TownCenterBadge level={m.town_center} size={40} />
+                  </span>
                 </div>
 
                 <div className="mr-status">
