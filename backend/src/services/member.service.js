@@ -6,6 +6,7 @@ const v = require('../utils/validate');
 const img = require('../utils/image');
 const { uploadToImgbb } = require('../utils/imgbb');
 const Members = require('../models/members');
+const Alliances = require('../models/alliances');
 
 function publicView(row) {
   return {
@@ -23,8 +24,19 @@ function publicView(row) {
   };
 }
 
-async function list() {
-  return (await Members.listPublic()).map(publicView);
+// allianceKey picks which roster to show (e.g. 'spb-1660'); omitted means the
+// primary alliance, so the original /members page keeps showing exactly its
+// own roster rather than everyone on the site.
+async function list(allianceKey) {
+  const alliance = allianceKey ? await Alliances.findByKey(String(allianceKey)) : await Alliances.findPrimary();
+  if (!alliance) throw httpError(404, 'Alliance not found.');
+  return (await Members.listPublic(alliance.id)).map(publicView);
+}
+
+async function listAlliances() {
+  return (await Alliances.listAll()).map((a) => ({
+    key: a.key, label: a.label, kingdom_id: a.kingdom_id, tag: a.tag, is_primary: a.is_primary,
+  }));
 }
 
 async function get(id) {
@@ -56,4 +68,4 @@ async function uploadAvatar(memberId, file) {
   return publicView(updated);
 }
 
-module.exports = { list, get, updateOwnProfile, uploadAvatar, publicView };
+module.exports = { list, listAlliances, get, updateOwnProfile, uploadAvatar, publicView };

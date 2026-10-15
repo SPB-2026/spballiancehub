@@ -9,7 +9,8 @@ async function rows(metric = 'score') {
       .prepare(
         `SELECT m.id, m.name, m.avatar, m.role, m.status, m.contributions, m.score, m.town_center, m.join_date
        FROM members m
-       WHERE m.status = 'active'
+       JOIN alliances a ON a.id = m.alliance_id
+       WHERE m.status = 'active' AND a.show_in_leaderboard = true
        ORDER BY ${key} DESC, m.contributions DESC, m.name ASC
        LIMIT 50`
       )

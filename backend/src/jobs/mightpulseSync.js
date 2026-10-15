@@ -14,10 +14,16 @@ const BOOT_DELAY_MS = 30000; // stagger after the gift-code boot fetch
 
 async function run() {
   try {
-    const { kingdomId, tag } = await mightpulse.getConfig();
-    if (!kingdomId || !tag) return; // not configured yet — silently skip
+    if (!env.MIGHTPULSE_API_KEY) return; // not configured yet — silently skip
     const result = await mightpulse.runSync();
-    console.log(`[mightpulse-sync] updated ${result.updated}, queued ${result.queued} new, flagged ${result.flagged} missing`);
+    for (const a of result.alliances) {
+      if (a.error) {
+        console.error(`[mightpulse-sync] ${a.label}: failed — ${a.error}`);
+      } else {
+        const note = a.warning ? ` (${a.warning})` : '';
+        console.log(`[mightpulse-sync] ${a.label}: updated ${a.updated}, queued ${a.queued} new, flagged ${a.flagged} missing${note}`);
+      }
+    }
   } catch (err) {
     console.error('[mightpulse-sync] job failed:', err.message);
   }

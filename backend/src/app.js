@@ -10,6 +10,7 @@ const { securityHeaders, noStore } = require('./middleware/security');
 const { audit } = require('./middleware/audit');
 const { apiLimiter } = require('./middleware/rateLimit');
 const { notFound, errorHandler } = require('./middleware/errors');
+const { attachUser } = require('./middleware/auth');
 
 const app = express();
 
@@ -53,7 +54,8 @@ app.use(
   securityHeaders,
   noStore,
   express.json({ limit: '250kb' }),
-  cookieParser()
+  cookieParser(),
+  attachUser
 );
 
 // Health check — always public, no rate limit, JSON response.
@@ -88,6 +90,7 @@ app.use('/api/gifts', require('./routes/gifts.routes'));
 app.use('/api/leaderboard', require('./routes/leaderboard.routes'));
 app.use('/api/settings', require('./routes/settings.routes'));
 app.use('/api/announcements', require('./routes/announcements.routes'));
+app.use('/api/access', require('./routes/access.routes'));
 
 // Admin routes — direct access, no login required.
 // `audit` records successful mutations in admin_activity.

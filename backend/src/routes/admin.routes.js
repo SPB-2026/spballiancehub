@@ -13,6 +13,21 @@ const ArticleService = require('../services/article.service');
 const ArticleModel = require('../models/articles');
 const GiftService = require('../services/gift.service');
 const MightPulseService = require('../services/mightpulse.service');
+const AccessService = require('../services/access.service');
+const Alliances = require('../models/alliances');
+const { httpError } = require('../middleware/errors');
+
+// Resolves ?alliance=<key> for the per-alliance admin pages:
+//   missing / 'all' → undefined (everyone), 'none' → members with no alliance,
+//   a key like 'spb-1660' → that alliance's id.
+async function allianceFilter(req) {
+  const key = req.query.alliance;
+  if (!key || key === 'all') return undefined;
+  if (key === 'none') return 'none';
+  const a = await Alliances.findByKey(String(key));
+  if (!a) throw httpError(400, 'Unknown alliance.');
+  return a.id;
+}
 
 // Route-level guard: /:id must be a positive integer (prevents 500s on
 // malformed paths like /gifts/sources-before-ordering or /gifts/12abc).
@@ -32,7 +47,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 *
 router.get('/dashboard', asyncHandler(async (req, res) => res.json(await AdminService.dashboard())));
 
 // ── Members (private data: Game User ID, email, stats) ─────────────────────
-router.get('/members', asyncHandler(async (req, res) => res.json(await AdminService.listMembers())));
+router.get('/members', asyncHandler(async (req, res) => res.json(await AdminService.listMembers(await allianceFilter(req)))));
 router.post('/members', asyncHandler(async (req, res) => res.status(201).json(await AdminService.createMember(req.body || {}))));
 router.put('/members/:id', asyncHandler(async (req, res) => res.json(await AdminService.updateMember(Number(req.params.id), req.body || {}))));
 router.delete('/members/:id', asyncHandler(async (req, res) => res.json(await AdminService.removeMember(Number(req.params.id)))));
@@ -41,15 +56,33 @@ router.post('/members/:id/reset-stats', asyncHandler(async (req, res) => res.jso
 // ── MightPulse roster sync ──────────────────────────────────────────────────
 // Stat updates (power, Town Center, role) for existing members apply
 // automatically; new/missing members always wait here for admin approval.
-router.post('/mightpulse/sync', asyncHandler(async (req, res) => res.json(await MightPulseService.runSync())));
+router.post('/mightpulse/sync', asyncHandler(async (req, res) => {
+  // ?alliance=<key> syncs just that alliance; otherwise every registered alliance.
+  const key = req.query.alliance && !['all', 'none'].includes(req.query.alliance) ? String(req.query.alliance) : undefined;
+  res.json(await MightPulseService.runSync(key));
+}));
 router.get('/mightpulse/review', asyncHandler(async (req, res) => {
-  const [pending, missing] = await Promise.all([MightPulseService.listPending(), MightPulseService.listMissing()]);
+  const allianceId = await allianceFilter(req);
+  const [pending, missing] = await Promise.all([MightPulseService.listPending(allianceId), MightPulseService.listMissing(allianceId)]);
   res.json({ pending, missing });
 }));
 router.post('/mightpulse/pending/:id/approve', asyncHandler(async (req, res) => res.json(await MightPulseService.approvePending(Number(req.params.id)))));
-router.post('/mightpulse/pending/approve-all', asyncHandler(async (req, res) => res.json(await MightPulseService.approveAllPending())));
+router.post('/mightpulse/pending/approve-all', asyncHandler(async (req, res) => res.json(await MightPulseService.approveAllPending(await allianceFilter(req)))));
 router.delete('/mightpulse/pending/:id', asyncHandler(async (req, res) => res.json(await MightPulseService.dismissPending(Number(req.params.id)))));
 router.post('/mightpulse/missing/:id/dismiss', asyncHandler(async (req, res) => res.json(await MightPulseService.dismissMissing(Number(req.params.id)))));
+
+// Alliances tracked on this site (e.g. SPB in Kingdom 1749 and 1660)
+router.get('/alliances', asyncHandler(async (req, res) => res.json(await AdminService.listAlliances())));
+router.put('/alliances/:id', asyncHandler(async (req, res) => res.json(await AdminService.updateAlliance(Number(req.params.id), req.body || {}))));
+
+// Member access gate — magic link + Game ID (see services/access.service.js)
+router.get('/access-link', asyncHandler(async (req, res) => res.json(await AccessService.getLinkInfo())));
+router.post('/access-link/rotate', asyncHandler(async (req, res) => res.json(await AccessService.rotateLink())));
+router.get('/access-log', asyncHandler(async (req, res) => res.json(await AccessService.listAccessLog({
+  search: req.query.search,
+  limit: req.query.limit,
+  offset: req.query.offset,
+}))));
 
 // ── Events / Calendar ───────────────────────────────────────────────────────
 router.get('/events', asyncHandler(async (req, res) => res.json(await EventService.adminList())));

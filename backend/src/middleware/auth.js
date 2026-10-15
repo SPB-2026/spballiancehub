@@ -48,6 +48,12 @@ function readToken(req) {
   return req.cookies ? req.cookies.spb_token : null;
 }
 
+// Member-access cookie is separate from the admin session cookie — a visitor
+// can hold either, neither, or (rarely) both at once.
+function readMemberToken(req) {
+  return req.cookies ? req.cookies.spb_member_token : null;
+}
+
 async function resolveAuth(token) {
   let payload;
   try {
@@ -64,16 +70,37 @@ async function resolveAuth(token) {
     if (!row) return { auth: null };
     return { auth: payload, admin: row };
   }
+
+  if (payload.type === 'member') {
+    // Re-checked against the LIVE roster on every single request — this is
+    // what makes removing someone from the member list (or Sync flagging
+    // them as gone) take effect immediately, rather than only at next login.
+    const row = await db
+      .prepare('SELECT id, game_user_id, name FROM members WHERE game_user_id = ? AND status = \'active\'')
+      .get(payload.game_user_id);
+    if (!row) return { auth: null };
+    return { auth: payload, member: row };
+  }
+
   return { auth: null };
 }
 
 function attachUser(req, res, next) {
-  const token = readToken(req);
-  if (!token) return next();
-  resolveAuth(token)
-    .then(({ auth, admin }) => {
-      req.auth = auth;
-      if (admin) req.admin = admin;
+  const adminToken = readToken(req);
+  const memberToken = readMemberToken(req);
+  const adminCheck = adminToken ? resolveAuth(adminToken) : Promise.resolve({ auth: null });
+  const memberCheck = memberToken ? resolveAuth(memberToken) : Promise.resolve({ auth: null });
+
+  Promise.all([adminCheck, memberCheck])
+    .then(([adminResult, memberResult]) => {
+      if (adminResult.admin) {
+        req.auth = adminResult.auth;
+        req.admin = adminResult.admin;
+      }
+      if (memberResult.member) {
+        req.memberAuth = memberResult.auth;
+        req.member = memberResult.member;
+      }
       next();
     })
     .catch(() => next()); // never let an auth check take the request down
@@ -95,4 +122,12 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { signToken, readToken, attachUser, requireAuth, requireAdmin, revokeToken };
+function requireMember(req, res, next) {
+  if (!req.member) return res.status(401).json({ error: 'Member verification required.' });
+  next();
+}
+
+module.exports = {
+  signToken, readToken, readMemberToken, attachUser,
+  requireAuth, requireAdmin, requireMember, revokeToken,
+};

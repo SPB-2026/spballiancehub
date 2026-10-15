@@ -13,6 +13,7 @@ const Settings = require('../models/settings');
 const Activity = require('../models/activity');
 const Announcements = require('../models/announcements');
 const Media = require('../models/media');
+const Alliances = require('../models/alliances');
 
 async function dashboard() {
   const events = await Events.list();
@@ -101,15 +102,30 @@ async function clearActivity() {
 }
 
 // ── Member management (PRIVATE data lives here) ────────────────────────────
-async function listMembers() {
-  return Members.listAll();
+// allianceId: a number, 'none' (members with no alliance), or undefined (everyone).
+async function listMembers(allianceId) {
+  return Members.listAll(allianceId);
 }
 
-// Only one member may hold R5 at any time (the alliance leader).
-async function assertR5Available(targetId) {
-  const holders = (await Members.findRole('R5')).filter((h) => h.id !== targetId);
+// Empty/absent → no alliance. Otherwise must point at a real alliance.
+async function resolveAllianceId(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const id = Number(value);
+  if (!Number.isInteger(id) || !(await Alliances.findById(id))) {
+    throw httpError(400, 'Unknown alliance.');
+  }
+  return id;
+}
+
+const isDuplicateError = (err) => /unique|duplicate key/i.test(String(err.message));
+
+// Only one member per alliance may hold R5 (that alliance's leader). Members
+// with no alliance have no roster to lead, so the rule doesn't apply to them.
+async function assertR5Available(targetId, allianceId) {
+  if (!allianceId) return;
+  const holders = (await Members.findRole('R5', allianceId)).filter((h) => h.id !== targetId);
   if (holders.length > 0) {
-    throw httpError(409, `R5 is already held by ${holders[0].name}. Only one member can be R5 — demote them first.`);
+    throw httpError(409, `R5 is already held by ${holders[0].name} in this alliance. Only one member can be R5 — demote them first.`);
   }
 }
 
@@ -120,7 +136,8 @@ async function createMember(input) {
   const email = emailRaw || null;
   const name = v.str(input.name, { field: 'Display name', max: 40 });
   const role = v.oneOf(input.role || 'R1', ['R5', 'R4', 'R3', 'R2', 'R1'], 'Role');
-  if (role === 'R5') await assertR5Available(null);
+  const alliance_id = await resolveAllianceId(input.alliance_id);
+  if (role === 'R5') await assertR5Available(null, alliance_id);
   const status = v.oneOf(input.status || 'active', ['active', 'inactive', 'banned'], 'Status');
   const bio = v.cleanText(input.bio || '', { field: 'Bio', max: 300, optional: true });
   const contributions = v.int(input.contributions, { field: 'Contributions', min: 0, max: 100000000, optional: true });
@@ -128,9 +145,9 @@ async function createMember(input) {
   const town_center = v.int(input.town_center, { field: 'Town Center', min: 0, max: 100, optional: true }) || null;
   const join_date = input.join_date ? v.isoDateTime(input.join_date, { field: 'Join date', optional: true }).slice(0, 10) : new Date().toISOString().slice(0, 10);
   try {
-    return await Members.create({ game_user_id, email, name, role, status, bio, contributions, score, town_center, join_date });
+    return await Members.create({ game_user_id, email, name, role, status, bio, contributions, score, town_center, join_date, alliance_id });
   } catch (err) {
-    if (String(err.message).includes('UNIQUE')) throw httpError(409, 'A member with that Game User ID or email already exists.');
+    if (isDuplicateError(err)) throw httpError(409, 'A member with that Game User ID or email already exists.');
     throw err;
   }
 }
@@ -155,9 +172,14 @@ async function updateMember(id, input) {
     }
   }
   if (input.game_user_id !== undefined) fields.game_user_id = v.gameUserId(input.game_user_id);
-  if (input.role !== undefined) {
-    fields.role = v.oneOf(input.role, ['R5', 'R4', 'R3', 'R2', 'R1'], 'Role');
-    if (fields.role === 'R5') await assertR5Available(id);
+  if (input.role !== undefined) fields.role = v.oneOf(input.role, ['R5', 'R4', 'R3', 'R2', 'R1'], 'Role');
+  if (input.alliance_id !== undefined) fields.alliance_id = await resolveAllianceId(input.alliance_id);
+  // Whether the role or the alliance (or both) is changing, the member's
+  // resulting role + alliance must not give that alliance a second R5.
+  if (fields.role !== undefined || fields.alliance_id !== undefined) {
+    const effectiveRole = fields.role !== undefined ? fields.role : existing.role;
+    const effectiveAlliance = fields.alliance_id !== undefined ? fields.alliance_id : existing.alliance_id;
+    if (effectiveRole === 'R5') await assertR5Available(id, effectiveAlliance);
   }
   if (input.status !== undefined) fields.status = v.oneOf(input.status, ['active', 'inactive', 'banned'], 'Status');
   if (input.bio !== undefined) fields.bio = v.cleanText(input.bio, { field: 'Bio', max: 300, optional: true });
@@ -168,7 +190,7 @@ async function updateMember(id, input) {
   try {
     return await Members.update(id, fields);
   } catch (err) {
-    if (String(err.message).includes('UNIQUE')) throw httpError(409, 'That Game User ID or email is already in use.');
+    if (isDuplicateError(err)) throw httpError(409, 'That Game User ID or email is already in use.');
     throw err;
   }
 }
@@ -185,9 +207,30 @@ async function resetMemberStats(id) {
   return row;
 }
 
+// ── Alliances (the rosters tracked on this site) ───────────────────────────
+async function listAlliances() {
+  return Alliances.listAll();
+}
+
+async function updateAlliance(id, input) {
+  const existing = await Alliances.findById(id);
+  if (!existing) throw httpError(404, 'Alliance not found.');
+  const fields = {};
+  if (input.label !== undefined) fields.label = v.str(input.label, { field: 'Label', max: 60 });
+  if (input.kingdom_id !== undefined) {
+    const k = String(input.kingdom_id).trim();
+    if (!/^\d{1,6}$/.test(k)) throw httpError(400, 'Kingdom ID must be a number.');
+    fields.kingdom_id = k;
+  }
+  if (input.tag !== undefined) fields.tag = v.str(input.tag, { field: 'Alliance tag', max: 12 });
+  if (input.show_in_leaderboard !== undefined) fields.show_in_leaderboard = Boolean(input.show_in_leaderboard);
+  return Alliances.update(id, fields);
+}
+
 module.exports = {
   dashboard,
   listMembers, createMember, updateMember, removeMember, resetMemberStats,
   listAdmins, createAdmin, updateAdmin, removeAdmin,
   activity, clearActivity,
+  listAlliances, updateAlliance,
 };

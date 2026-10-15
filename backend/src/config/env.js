@@ -78,12 +78,9 @@ const env = {
 
   // MightPulse API key used to sync the member roster (power, Town Center,
   // alliance rank) from the game. Get a free key at https://api.mightpulse.com
-  // (sign in with Discord). MP_KINGDOM_ID and MP_ALLIANCE_TAG identify which
-  // alliance to pull — these can also be set from Admin → Settings instead,
-  // which takes priority if both are present.
+  // (sign in with Discord). Which kingdoms/alliances get synced is configured
+  // in Admin → Settings → Alliances, not here.
   MIGHTPULSE_API_KEY: process.env.MIGHTPULSE_API_KEY || '',
-  MP_KINGDOM_ID: process.env.MP_KINGDOM_ID || '',
-  MP_ALLIANCE_TAG: process.env.MP_ALLIANCE_TAG || '',
 
   // How often the automatic MightPulse roster sync runs, in seconds.
   MP_SYNC_INTERVAL: parseInt(process.env.MP_SYNC_INTERVAL || String(6 * 60 * 60), 10),
