@@ -11,15 +11,29 @@ import { IconPlus, IconEdit, IconTrash, IconBolt, IconSearch, IconRefresh, IconU
 const EMPTY = {
   game_user_id: '', email: '', name: '', role: 'R1', status: 'active',
   bio: '', contributions: 0, score: 0, town_center: '', join_date: new Date().toISOString().slice(0, 10),
-  avatar: '', photoFile: null, photoPreview: null,
+  alliance_id: '', avatar: '', photoFile: null, photoPreview: null,
 };
 
 const ROLE_BADGE = { R5: 'gold', R4: 'gold', R3: 'blue', R2: 'gray', R1: 'gray' };
 
 export default function AdminMembers() {
   const toast = useToast();
-  const { data, loading, error, reload } = useAsync(() => api.get('/admin/members'), []);
-  const { data: review, reload: reloadReview } = useAsync(() => api.get('/admin/mightpulse/review'), []);
+  // Alliance tabs: one per tracked alliance, plus "Friends & others" ('none')
+  // for members who belong to no alliance roster.
+  const { data: alliances } = useAsync(() => api.get('/admin/alliances'), []);
+  const [tab, setTab] = useState(null);
+  const allianceList = alliances || [];
+  const activeTab = tab || (allianceList.find((a) => a.is_primary) || allianceList[0])?.key || null;
+  const activeAlliance = allianceList.find((a) => a.key === activeTab) || null;
+
+  const { data, loading, error, reload } = useAsync(
+    () => (activeTab ? api.get(`/admin/members?alliance=${encodeURIComponent(activeTab)}`) : Promise.resolve([])),
+    [activeTab]
+  );
+  const { data: review, reload: reloadReview } = useAsync(
+    () => (activeTab ? api.get(`/admin/mightpulse/review?alliance=${encodeURIComponent(activeTab)}`) : Promise.resolve({ pending: [], missing: [] })),
+    [activeTab]
+  );
   const [reviewOpen, setReviewOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [reviewBusy, setReviewBusy] = useState(false);
@@ -37,12 +51,12 @@ export default function AdminMembers() {
     return [m.name, m.game_user_id, m.email].some((val) => String(val || '').toLowerCase().includes(q));
   });
 
-  function openNew() { setForm(EMPTY); setFormError(''); setEditing('new'); }
+  function openNew() { setForm({ ...EMPTY, alliance_id: activeAlliance ? activeAlliance.id : '' }); setFormError(''); setEditing('new'); }
   function openEdit(m) {
     setForm({
       game_user_id: m.game_user_id, email: m.email, name: m.name, role: m.role, status: m.status,
       bio: m.bio || '', contributions: m.contributions, score: m.score, town_center: m.town_center || '', join_date: m.join_date,
-      avatar: m.avatar || '', photoFile: null, photoPreview: null,
+      alliance_id: m.alliance_id ?? '', avatar: m.avatar || '', photoFile: null, photoPreview: null,
     });
     setFormError('');
     setEditing(m);
@@ -138,8 +152,9 @@ export default function AdminMembers() {
   async function syncNow() {
     setSyncing(true);
     try {
-      const result = await api.post('/admin/mightpulse/sync');
-      toast.success('Sync complete', `${result.updated} updated · ${result.queued} new found · ${result.flagged} flagged as possibly left.`);
+      const result = await api.post(`/admin/mightpulse/sync?alliance=${encodeURIComponent(activeTab)}`);
+      const note = (result.alliances || []).map((a) => a.warning || (a.error ? `${a.label}: ${a.error}` : '')).filter(Boolean).join(' ');
+      toast.success('Sync complete', `${result.updated} updated · ${result.queued} new found · ${result.flagged} flagged as possibly left.${note ? ` ${note}` : ''}`);
       reload();
       reloadReview();
     } catch (err) {
@@ -165,7 +180,7 @@ export default function AdminMembers() {
   async function approveAll() {
     setReviewBusy(true);
     try {
-      const result = await api.post('/admin/mightpulse/pending/approve-all');
+      const result = await api.post(`/admin/mightpulse/pending/approve-all?alliance=${encodeURIComponent(activeTab)}`);
       const addedCount = result.created?.length ?? 0;
       const failedCount = result.failed?.length ?? 0;
       if (failedCount > 0) {
@@ -291,9 +306,35 @@ export default function AdminMembers() {
               aria-label="Search members"
             />
           </div>
-          <Button variant="ghost" icon={<IconRefresh />} loading={syncing} onClick={syncNow}>Sync now</Button>
+          {activeAlliance ? (
+            <Button variant="ghost" icon={<IconRefresh />} loading={syncing} onClick={syncNow}>Sync now</Button>
+          ) : null}
           <Button icon={<IconPlus />} onClick={openNew}>Add member</Button>
         </div>
+      </div>
+
+      <div className="filter-row" role="tablist" aria-label="Alliance" style={{ marginBottom: 16 }}>
+        {allianceList.map((a) => (
+          <button
+            key={a.key}
+            type="button"
+            role="tab"
+            aria-selected={a.key === activeTab}
+            className={`filter-chip${a.key === activeTab ? ' active' : ''}`}
+            onClick={() => setTab(a.key)}
+          >
+            {a.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'none'}
+          className={`filter-chip${activeTab === 'none' ? ' active' : ''}`}
+          onClick={() => setTab('none')}
+        >
+          Friends &amp; others
+        </button>
       </div>
 
       {reviewCount > 0 ? (
@@ -311,7 +352,7 @@ export default function AdminMembers() {
       <AdminTable
         columns={columns}
         rows={filtered}
-        loading={loading}
+        loading={loading || !alliances}
         error={error}
         onRetry={reload}
         emptyIcon="🛡️"
@@ -360,6 +401,12 @@ export default function AdminMembers() {
               <Field label="Role (rank)" id="m-role" hint="R5 is the highest rank, R1 the newest.">
                 <select id="m-role" className="select" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                   {['R5', 'R4', 'R3', 'R2', 'R1'].map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </Field>
+              <Field label="Alliance" id="m-alliance" hint="Which roster they appear on. Choose none for friends outside these alliances.">
+                <select id="m-alliance" className="select" value={form.alliance_id} onChange={(e) => setForm({ ...form, alliance_id: e.target.value })}>
+                  <option value="">None — friend / other</option>
+                  {allianceList.map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}
                 </select>
               </Field>
               <Field label="Status" id="m-status">

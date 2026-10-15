@@ -15,6 +15,7 @@ import Leaderboard from './pages/Leaderboard.jsx';
 import GiftCodes from './pages/GiftCodes.jsx';
 import PolicyPage from './pages/Policy.jsx';
 import NotFound from './pages/NotFound.jsx';
+import AccessGate from './pages/AccessGate.jsx';
 
 import MemberLayout from './layouts/MemberLayout.jsx';
 import AdminLayout from './admin/AdminLayout.jsx';
@@ -26,6 +27,7 @@ import AdminTips from './admin/AdminTips.jsx';
 import AdminGifts from './admin/AdminGifts.jsx';
 import AdminAdmins from './admin/AdminAdmins.jsx';
 import AdminActivity from './admin/AdminActivity.jsx';
+import AdminAccessLog from './admin/AdminAccessLog.jsx';
 import AdminHome from './admin/AdminHome.jsx';
 import AdminAnnouncements from './admin/AdminAnnouncements.jsx';
 import AdminMedia from './admin/AdminMedia.jsx';
@@ -93,7 +95,7 @@ class ErrorBoundary extends React.Component {
 
 
 export default function App() {
-  const { user, booting, settings } = useAuth();
+  const { user, booting, settings, memberVerified } = useAuth();
   const pathname = useLocation().pathname;
 
   // Admin-managed favicon + meta description (defaults stay when unset).
@@ -126,25 +128,35 @@ export default function App() {
   return (
     <ErrorBoundary>
     <Routes>
-      {/* Public website — no login required */}
-      <Route element={<MemberLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/members" element={<Members />} />
-        <Route path="/calendar" element={<CalendarPage />} />
-        <Route path="/events" element={<Events />} />
-        {/* /chat redirected: the Chat feature was removed (old links land on Home) */}
-        <Route path="/chat" element={<Navigate to="/" replace />} />
-        <Route path="/news" element={<News />} />
-        <Route path="/news/:id" element={<NewsArticle />} />
-        <Route path="/tips" element={<Tips />} />
-        <Route path="/tips/:id" element={<TipArticle />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        <Route path="/gift-codes" element={<GiftCodes />} />
-        <Route path="/privacy" element={<PolicyPage which="privacy" />} />
-        <Route path="/terms" element={<PolicyPage which="terms" />} />
-        <Route path="/community-guidelines" element={<PolicyPage which="guidelines" />} />
-        <Route path="/copyright" element={<PolicyPage which="copyright" />} />
-      </Route>
+      {/* Magic-link entry point — always reachable, verified or not. */}
+      <Route path="/enter/:token" element={<AccessGate />} />
+
+      {/* Public website — gated behind the member access check. Unverified
+          visitors hit the catch-all below instead of any of these. */}
+      {memberVerified ? (
+        <Route element={<MemberLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/members" element={<Members />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/events" element={<Events />} />
+          {/* /chat redirected: the Chat feature was removed (old links land on Home) */}
+          <Route path="/chat" element={<Navigate to="/" replace />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/news/:id" element={<NewsArticle />} />
+          <Route path="/tips" element={<Tips />} />
+          <Route path="/tips/:id" element={<TipArticle />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/gift-codes" element={<GiftCodes />} />
+          <Route path="/privacy" element={<PolicyPage which="privacy" />} />
+          <Route path="/terms" element={<PolicyPage which="terms" />} />
+          <Route path="/community-guidelines" element={<PolicyPage which="guidelines" />} />
+          <Route path="/copyright" element={<PolicyPage which="copyright" />} />
+        </Route>
+      ) : null}
+      {/* Not verified: this single wildcard catches every member-facing path
+          (since the specific routes above don't even exist in that render)
+          and shows the locked message. Verified: it's a normal 404 instead,
+          since real pages above take precedence. */}
 
       {/* Admin area — direct access, no login required */}
       <Route element={<AdminLayout />}>
@@ -164,10 +176,11 @@ export default function App() {
         <Route path="/spballiancehubadministrator2026/settings" element={<AdminSettings />} />
         <Route path="/spballiancehubadministrator2026/admins" element={<AdminAdmins />} />
         <Route path="/spballiancehubadministrator2026/activity" element={<AdminActivity />} />
+        <Route path="/spballiancehubadministrator2026/access-log" element={<AdminAccessLog />} />
         <Route path="/spballiancehubadministrator2026/profile" element={<AdminProfile />} />
       </Route>
 
-      <Route path="*" element={<NotFound />} />
+      <Route path="*" element={memberVerified ? <NotFound /> : <AccessGate />} />
     </Routes>
     </ErrorBoundary>
   );

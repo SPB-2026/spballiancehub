@@ -6,6 +6,8 @@ export const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [settings, setSettings] = useState(null);
   const [booting, setBooting] = useState(true);
+  const [memberVerified, setMemberVerified] = useState(false);
+  const [memberName, setMemberName] = useState('');
 
   const refresh = useCallback(async () => {
     try {
@@ -16,9 +18,29 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const refreshAccessStatus = useCallback(async () => {
+    try {
+      const status = await api.get('/access/status');
+      setMemberVerified(Boolean(status.verified));
+      setMemberName(status.name || '');
+    } catch {
+      setMemberVerified(false);
+    }
+  }, []);
+
   useEffect(() => {
-    refresh().finally(() => setBooting(false));
-  }, [refresh]);
+    Promise.all([refresh(), refreshAccessStatus()]).finally(() => setBooting(false));
+  }, [refresh, refreshAccessStatus]);
+
+  // The one-time Game ID popup after the magic link — see access.service.js
+  // on the backend. Throws on an invalid/expired link or unrecognized ID so
+  // the gate component can show the error.
+  const verifyMember = useCallback(async (gameUserId, token) => {
+    const result = await api.post('/access/verify', { game_user_id: gameUserId, token });
+    setMemberVerified(true);
+    setMemberName(result.name || '');
+    return result;
+  }, []);
 
   // No admin login — direct access via /spballiancehubadministrator2026
   const user = null;
@@ -28,7 +50,10 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, settings, booting, isAdmin, refresh, loginAdmin, logout, setSettings }}
+      value={{
+        user, settings, booting, isAdmin, refresh, loginAdmin, logout, setSettings,
+        memberVerified, memberName, verifyMember, refreshAccessStatus,
+      }}
     >
       {children}
     </AuthContext.Provider>

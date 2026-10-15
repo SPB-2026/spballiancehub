@@ -1,8 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useToast } from '../components/Toast.jsx';
 import api from '../services/api.js';
-import { Button, Field, Badge } from '../components/ui.jsx';
+import { Button, Field, Badge, ConfirmDialog } from '../components/ui.jsx';
+import { IconRefresh, IconCopy } from '../components/icons.jsx';
 import Emblem from '../components/Emblem.jsx';
 import MediaPicker from '../components/MediaPicker.jsx';
 import RichTextEditor from '../components/RichTextEditor.jsx';
@@ -28,6 +29,67 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkLoading, setLinkLoading] = useState(true);
+  const [rotating, setRotating] = useState(false);
+  const [confirmRotate, setConfirmRotate] = useState(false);
+
+  useEffect(() => {
+    api.get('/admin/access-link')
+      .then((r) => setLinkUrl(r.url))
+      .catch(() => {})
+      .finally(() => setLinkLoading(false));
+  }, []);
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(linkUrl);
+      toast.success('Copied', 'Link copied to your clipboard.');
+    } catch {
+      toast.error('Copy failed', 'Select and copy the link manually.');
+    }
+  }
+
+  const [allianceRows, setAllianceRows] = useState([]);
+  const [savingAlliance, setSavingAlliance] = useState(null);
+
+  useEffect(() => {
+    api.get('/admin/alliances').then(setAllianceRows).catch(() => {});
+  }, []);
+
+  function editAlliance(id, patch) {
+    setAllianceRows((rows) => rows.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+  }
+
+  async function saveAlliance(a) {
+    setSavingAlliance(a.id);
+    try {
+      const saved = await api.put(`/admin/alliances/${a.id}`, {
+        label: a.label, kingdom_id: a.kingdom_id, tag: a.tag, show_in_leaderboard: a.show_in_leaderboard,
+      });
+      editAlliance(a.id, saved);
+      toast.success('Alliance saved', saved.label);
+    } catch (err) {
+      toast.error('Could not save alliance', err.message);
+    } finally {
+      setSavingAlliance(null);
+    }
+  }
+
+  async function rotateLink() {
+    setConfirmRotate(false);
+    setRotating(true);
+    try {
+      const r = await api.post('/admin/access-link/rotate');
+      setLinkUrl(r.url);
+      toast.success('New link generated', 'Share it with your alliance — the old link no longer works for new entries.');
+    } catch (err) {
+      toast.error('Failed to generate a new link', err.message);
+    } finally {
+      setRotating(false);
+    }
+  }
 
   async function save(e) {
     e.preventDefault();
@@ -157,7 +219,79 @@ export default function AdminSettings() {
             <MediaPicker initial={form.favicon} onPick={(url) => setForm({ ...form, favicon: url })} label="Choose favicon" />
           </Field>
         </div>
+
+        <div className="card card-gold card-pad">
+          <h2 style={{ fontSize: 17, marginBottom: 16 }}>Member Access Link</h2>
+          <p className="text-dim" style={{ fontSize: 13, marginBottom: 14 }}>
+            Share this link with your alliance — it's how members get into the site. They click it
+            once, enter their Game ID, and stay signed in after that. Anyone without this link
+            can't get past the front page at all.
+          </p>
+          {linkLoading ? (
+            <div className="skeleton" style={{ height: 42, borderRadius: 10 }} />
+          ) : (
+            <>
+              <div className="flex items-center gap-1">
+                <input className="input mono" style={{ flex: 1, fontSize: 13 }} readOnly value={linkUrl} onFocus={(e) => e.target.select()} />
+                <Button type="button" variant="outline" size="sm" icon={<IconCopy />} onClick={copyLink}>Copy</Button>
+              </div>
+              <div className="mt-2">
+                <Button type="button" variant="ghost" size="sm" icon={<IconRefresh />} loading={rotating} onClick={() => setConfirmRotate(true)}>
+                  Generate new link
+                </Button>
+              </div>
+              <p className="text-dim" style={{ fontSize: 12, marginTop: 8 }}>
+                Members already signed in stay signed in — a new link only affects people trying to
+                get in for the first time. Use this if the old link ever leaks.
+              </p>
+            </>
+          )}
+        </div>
+
+        <div className="card card-pad">
+          <h2 style={{ fontSize: 17, marginBottom: 6 }}>Alliances</h2>
+          <p className="text-dim" style={{ fontSize: 13, marginBottom: 14 }}>
+            The rosters tracked on this site. Each one syncs from MightPulse using its kingdom and tag
+            (two alliances can share a tag — the kingdom is what tells them apart).
+          </p>
+          {allianceRows.map((a) => (
+            <div key={a.id} style={{ borderTop: '1px solid rgba(168, 179, 194, 0.14)', paddingTop: 12, marginTop: 12 }}>
+              <Field label="Name" id={`al-label-${a.id}`}>
+                <input id={`al-label-${a.id}`} className="input" value={a.label} maxLength={60} onChange={(e) => editAlliance(a.id, { label: e.target.value })} />
+              </Field>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <Field label="Kingdom" id={`al-kingdom-${a.id}`}>
+                    <input id={`al-kingdom-${a.id}`} className="input" inputMode="numeric" value={a.kingdom_id} maxLength={6} onChange={(e) => editAlliance(a.id, { kingdom_id: e.target.value.replace(/\D/g, '') })} />
+                  </Field>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Field label="Tag" id={`al-tag-${a.id}`}>
+                    <input id={`al-tag-${a.id}`} className="input" value={a.tag} maxLength={12} onChange={(e) => editAlliance(a.id, { tag: e.target.value })} />
+                  </Field>
+                </div>
+              </div>
+              <label className="checkbox-row">
+                <input type="checkbox" checked={Boolean(a.show_in_leaderboard)} onChange={(e) => editAlliance(a.id, { show_in_leaderboard: e.target.checked })} />
+                Show this alliance's members on the Leaderboard
+              </label>
+              <div className="mt-1">
+                <Button type="button" size="sm" loading={savingAlliance === a.id} onClick={() => saveAlliance(a)}>Save</Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {confirmRotate ? (
+        <ConfirmDialog
+          title="Generate a new access link?"
+          message="The current link will stop working for anyone who hasn't used it yet. Members already signed in on their devices are not affected."
+          confirmLabel="Generate new link"
+          onConfirm={rotateLink}
+          onCancel={() => setConfirmRotate(false)}
+        />
+      ) : null}
     </div>
   );
 }

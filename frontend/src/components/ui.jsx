@@ -64,28 +64,27 @@ export function Modal({ title, onClose, children, footer, wide = false }) {
     onCloseRef.current = onClose;
   }, [onClose]);
 
-  // Runs ONCE when the modal opens: lock page scroll, wire Escape, and focus
-  // the first visible form field. It must NOT re-run on re-renders (e.g. every
+  // Runs ONCE when the modal opens: lock page scroll and focus the first
+  // visible form field. It must NOT re-run on re-renders (e.g. every
   // keystroke) — that was the focus bug: the effect re-ran on each render and
   // yanked focus out of the field being typed into (onto the close button).
+  //
+  // Deliberately no Escape-to-close and no click-outside-to-close here — both
+  // used to silently discard whatever was being typed with zero warning.
+  // Closing now always requires the explicit × button (or a form's own
+  // Cancel button), so it's never accidental.
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onCloseRef.current(); };
-    document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     const firstField = Array.from(ref.current?.querySelectorAll('input, textarea, select') || [])
       .find((el) => !el.disabled && el.offsetParent !== null);
     firstField?.focus();
     return () => {
-      document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
   }, []);
 
   return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
+    <div className="modal-backdrop">
       <div className={`modal${wide ? ' modal-wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} ref={ref}>
         <div className="modal-head">
           <h2 className="modal-title">{title}</h2>

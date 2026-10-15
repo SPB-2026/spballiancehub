@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAsync } from '../hooks/useAsync.js';
 import api from '../services/api.js';
 import { LoadingBox, EmptyState, ErrorState } from '../components/ui.jsx';
@@ -10,9 +10,22 @@ import TownCenterBadge from '../components/TownCenterBadge.jsx';
 const ROLE_LABEL = { R5: 'R5', R4: 'R4', R3: 'R3', R2: 'R2', R1: 'R1' };
 
 export default function Members() {
-  const { data, loading, error, reload } = useAsync(() => api.get('/members'), []);
+  const alliances = useAsync(() => api.get('/members/alliances'), []);
+  const [selectedKey, setSelectedKey] = useState(null);
+  // Default to the primary alliance until a tab is picked.
+  const allianceList = alliances.data || [];
+  const activeKey = selectedKey || (allianceList.find((a) => a.is_primary) || allianceList[0])?.key;
 
-  if (loading) return <div className="page"><LoadingBox label="Summoning the roster…" /></div>;
+  const { data, loading, error, reload } = useAsync(
+    () => (activeKey ? api.get(`/members?alliance=${encodeURIComponent(activeKey)}`) : Promise.resolve(null)),
+    [activeKey]
+  );
+
+  // Show the loader on every fetch (not just the first) — otherwise the previous
+  // alliance's roster would linger on screen while a new tab loads.
+  if (alliances.loading || loading || (!data && !error)) {
+    return <div className="page"><LoadingBox label="Summoning the roster…" /></div>;
+  }
   if (error) return <div className="page"><ErrorState error={error} onRetry={reload} /></div>;
 
   const members = data;
@@ -29,6 +42,23 @@ export default function Members() {
       <p className="page-sub mb-2">
         Every member's public profile. Private details such as Game User ID and email are visible to admins only.
       </p>
+
+      {allianceList.length > 1 ? (
+        <div className="filter-row" role="tablist" aria-label="Alliance">
+          {allianceList.map((a) => (
+            <button
+              key={a.key}
+              type="button"
+              role="tab"
+              aria-selected={a.key === activeKey}
+              className={`filter-chip${a.key === activeKey ? ' active' : ''}`}
+              onClick={() => setSelectedKey(a.key)}
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {members.length === 0 ? (
         <EmptyState icon="🛡️" title="No members registered">Once the command registers members, their profiles appear here.</EmptyState>
@@ -57,9 +87,7 @@ export default function Members() {
                 </div>
 
                 <div className="mr-tc-col">
-                  <span className="mr-tc">
-                    <TownCenterBadge level={m.town_center} size={40} />
-                  </span>
+                  <TownCenterBadge level={m.town_center} size={40} />
                 </div>
 
                 <div className="mr-status">

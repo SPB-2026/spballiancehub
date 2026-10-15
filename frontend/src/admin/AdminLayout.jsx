@@ -23,6 +23,7 @@ const NAV = [
   { to: '/spballiancehubadministrator2026/settings', label: 'Site Settings', icon: <IconSettings /> },
   { to: '/spballiancehubadministrator2026/admins', label: 'Admin Accounts', icon: <IconShield /> },
   { to: '/spballiancehubadministrator2026/activity', label: 'Activity Log', icon: <IconClock /> },
+  { to: '/spballiancehubadministrator2026/access-log', label: 'Access Log', icon: <IconLink /> },
   { to: '/spballiancehubadministrator2026/profile', label: 'Admin Profile', icon: <IconUser /> },
 ];
 
