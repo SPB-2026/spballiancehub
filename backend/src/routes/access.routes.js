@@ -21,7 +21,10 @@ const COOKIE_OPTS = {
 router.post('/verify', authLimiter, asyncHandler(async (req, res) => {
   const { token, name } = await Access.verifyMember(req.body || {});
   res.cookie('spb_member_token', token, COOKIE_OPTS);
-  res.json({ ok: true, name });
+  // Also returned in the body: browsers that block cross-site cookies (iPhone
+  // Safari especially) never keep the cookie above, so the frontend stores
+  // this in its own storage and sends it as an Authorization header instead.
+  res.json({ ok: true, name, token });
 }));
 
 router.get('/status', asyncHandler(async (req, res) => {

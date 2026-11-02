@@ -14,6 +14,7 @@ const ArticleModel = require('../models/articles');
 const GiftService = require('../services/gift.service');
 const MightPulseService = require('../services/mightpulse.service');
 const AccessService = require('../services/access.service');
+const ResourceService = require('../services/resource.service');
 const Alliances = require('../models/alliances');
 const { httpError } = require('../middleware/errors');
 
@@ -74,6 +75,12 @@ router.post('/mightpulse/missing/:id/dismiss', asyncHandler(async (req, res) => 
 // Alliances tracked on this site (e.g. SPB in Kingdom 1749 and 1660)
 router.get('/alliances', asyncHandler(async (req, res) => res.json(await AdminService.listAlliances())));
 router.put('/alliances/:id', asyncHandler(async (req, res) => res.json(await AdminService.updateAlliance(Number(req.params.id), req.body || {}))));
+
+// Resources — links to outside sites shown on the members' Resources page
+router.get('/resources', asyncHandler(async (req, res) => res.json(await ResourceService.listAll())));
+router.post('/resources', asyncHandler(async (req, res) => res.status(201).json(await ResourceService.create(req.body))));
+router.put('/resources/:id', asyncHandler(async (req, res) => res.json(await ResourceService.update(Number(req.params.id), req.body))));
+router.delete('/resources/:id', asyncHandler(async (req, res) => res.json(await ResourceService.remove(Number(req.params.id)))));
 
 // Member access gate — magic link + Game ID (see services/access.service.js)
 router.get('/access-link', asyncHandler(async (req, res) => res.json(await AccessService.getLinkInfo())));

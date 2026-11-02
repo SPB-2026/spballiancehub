@@ -85,21 +85,37 @@ async function resolveAuth(token) {
   return { auth: null };
 }
 
-function attachUser(req, res, next) {
-  const adminToken = readToken(req);
-  const memberToken = readMemberToken(req);
-  const adminCheck = adminToken ? resolveAuth(adminToken) : Promise.resolve({ auth: null });
-  const memberCheck = memberToken ? resolveAuth(memberToken) : Promise.resolve({ auth: null });
+// Every credential a request might carry: the Authorization header (used when
+// the browser blocks cross-site cookies, e.g. iPhone Safari — the frontend
+// keeps the pass in its own storage and sends it this way), the admin cookie,
+// and the member cookie. Each token says what it is (admin or member), so
+// whichever arrives, it sets the right identity.
+function candidateTokens(req) {
+  const tokens = [];
+  const header = req.get('Authorization') || '';
+  if (header.startsWith('Bearer ') && header.length > 7) tokens.push(header.slice(7));
+  if (req.cookies && req.cookies.spb_token) tokens.push(req.cookies.spb_token);
+  if (req.cookies && req.cookies.spb_member_token) tokens.push(req.cookies.spb_member_token);
+  return [...new Set(tokens)];
+}
 
-  Promise.all([adminCheck, memberCheck])
-    .then(([adminResult, memberResult]) => {
-      if (adminResult.admin) {
-        req.auth = adminResult.auth;
-        req.admin = adminResult.admin;
-      }
-      if (memberResult.member) {
-        req.memberAuth = memberResult.auth;
-        req.member = memberResult.member;
+function attachUser(req, res, next) {
+  const tokens = candidateTokens(req);
+  if (tokens.length === 0) return next();
+
+  // A stale token in one place must never hide a valid one in another, so
+  // every candidate is checked and any valid one counts.
+  Promise.all(tokens.map((t) => resolveAuth(t).catch(() => ({ auth: null }))))
+    .then((results) => {
+      for (const r of results) {
+        if (r.admin && !req.admin) {
+          req.auth = r.auth;
+          req.admin = r.admin;
+        }
+        if (r.member && !req.member) {
+          req.memberAuth = r.auth;
+          req.member = r.member;
+        }
       }
       next();
     })

@@ -68,14 +68,14 @@ async function verifyMember({ game_user_id, token }) {
 
   const id = String(game_user_id || '').trim();
   if (!/^\d{9}$/.test(id)) {
-    throw httpError(400, 'Enter your 9-digit Game User ID.');
+    throw httpError(400, 'Enter your 9-digit Governor ID.');
   }
 
   const member = await db
     .prepare("SELECT id, game_user_id, name FROM members WHERE game_user_id = ? AND status = 'active'")
     .get(id);
   if (!member) {
-    throw httpError(403, 'This Game ID is not recognized as an active alliance member.');
+    throw httpError(403, "That Governor ID isn't on the active member list. If you only just joined the alliance, ask your leader to add you.");
   }
 
   const jwtToken = signToken({ type: 'member', game_user_id: member.game_user_id }, MEMBER_TOKEN_HOURS);

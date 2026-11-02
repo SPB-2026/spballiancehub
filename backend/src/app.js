@@ -91,6 +91,7 @@ app.use('/api/leaderboard', require('./routes/leaderboard.routes'));
 app.use('/api/settings', require('./routes/settings.routes'));
 app.use('/api/announcements', require('./routes/announcements.routes'));
 app.use('/api/access', require('./routes/access.routes'));
+app.use('/api/resources', require('./routes/resources.routes'));
 
 // Admin routes — direct access, no login required.
 // `audit` records successful mutations in admin_activity.
