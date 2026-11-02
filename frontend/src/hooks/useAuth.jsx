@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import api from '../services/api.js';
+import api, { setSessionToken, clearSessionToken } from '../services/api.js';
 
 export const AuthContext = createContext(null);
 
@@ -19,13 +19,23 @@ export function AuthProvider({ children }) {
   }, []);
 
   const refreshAccessStatus = useCallback(async () => {
-    try {
-      const status = await api.get('/access/status');
-      setMemberVerified(Boolean(status.verified));
-      setMemberName(status.name || '');
-    } catch {
-      setMemberVerified(false);
+    // A server that's just waking up can fail the first call or two. Retry a
+    // couple of times so a remembered member isn't shown the "private" page
+    // just because of that.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const status = await api.get('/access/status');
+        setMemberVerified(Boolean(status.verified));
+        setMemberName(status.name || '');
+        // The server answered and says no (removed from the roster, or the
+        // pass expired) — drop the stale pass so it isn't sent forever.
+        if (!status.verified) clearSessionToken();
+        return;
+      } catch {
+        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
     }
+    setMemberVerified(false);
   }, []);
 
   useEffect(() => {
@@ -37,6 +47,9 @@ export function AuthProvider({ children }) {
   // the gate component can show the error.
   const verifyMember = useCallback(async (gameUserId, token) => {
     const result = await api.post('/access/verify', { game_user_id: gameUserId, token });
+    // Kept in the browser's own storage and sent as a header, because phones
+    // that block cross-site cookies (iPhone Safari) never keep the cookie.
+    if (result.token) setSessionToken(result.token);
     setMemberVerified(true);
     setMemberName(result.name || '');
     return result;

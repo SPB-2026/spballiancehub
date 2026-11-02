@@ -5,8 +5,7 @@ import { useUtcClock, useLocalClock } from '../hooks/useClock.js';
 import { useTheme } from '../theme/theme.js';
 import {
   IconMenu, IconClose, IconGlobe, IconPin, IconClock,
-  IconHome, IconUsers, IconCalendar, IconBulb, IconGift,
-} from './icons.jsx';
+  IconHome, IconUsers, IconCalendar, IconBulb, IconGift, IconLink} from './icons.jsx';
 
 const MEMBER_NAV = [
   { to: '/', label: 'Home', end: true, icon: <IconHome />, color: '#F4D76A' },
@@ -14,6 +13,7 @@ const MEMBER_NAV = [
   { to: '/calendar', label: 'Calendar', icon: <IconCalendar />, color: '#D06A6A' },
   { to: '/tips', label: 'Tips', icon: <IconBulb />, color: '#F4D76A' },
   { to: '/gift-codes', label: 'Gift Codes', icon: <IconGift />, color: '#E05A5A' },
+  { to: '/resources', label: 'Resources', icon: <IconLink />, color: '#7FB069' },
 ];
 
 function NavIcon({ item }) {

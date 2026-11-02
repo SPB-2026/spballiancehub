@@ -1,5 +1,5 @@
-import React from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import AdminHeader from './AdminHeader.jsx';
 import { useAuth } from '../hooks/useAuth.jsx';
 import {
@@ -23,12 +23,18 @@ const NAV = [
   { to: '/spballiancehubadministrator2026/settings', label: 'Site Settings', icon: <IconSettings /> },
   { to: '/spballiancehubadministrator2026/admins', label: 'Admin Accounts', icon: <IconShield /> },
   { to: '/spballiancehubadministrator2026/activity', label: 'Activity Log', icon: <IconClock /> },
+  { to: '/spballiancehubadministrator2026/resources', label: 'Resources', icon: <IconLink /> },
   { to: '/spballiancehubadministrator2026/access-log', label: 'Access Log', icon: <IconLink /> },
   { to: '/spballiancehubadministrator2026/profile', label: 'Admin Profile', icon: <IconUser /> },
 ];
 
 export default function AdminLayout() {
   const { logout } = useAuth();
+  // Phone-size menu: opened from a button in the header, closed again as soon
+  // as a page is picked (or the dimmed area outside it is tapped).
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { pathname } = useLocation();
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   async function signOut() {
     await logout();
@@ -37,8 +43,9 @@ export default function AdminLayout() {
 
   return (
     <>
-      <AdminHeader />
-      <nav className="admin-nav" aria-label="Admin navigation">
+      <AdminHeader menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((o) => !o)} />
+      {menuOpen ? <div className="admin-nav-scrim" onClick={() => setMenuOpen(false)} aria-hidden="true" /> : null}
+      <nav className={`admin-nav${menuOpen ? ' open' : ''}`} aria-label="Admin navigation">
         <div className="admin-nav-label">Command</div>
         {NAV.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => (isActive ? 'active' : '')}>

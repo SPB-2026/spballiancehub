@@ -8,7 +8,7 @@ import { IconGlobe, IconPin, IconClock, IconShield } from '../components/icons.j
 // Dedicated top bar for the Admin Panel. The admin area is its own zone —
 // this header shows NO member-site navigation; the command sidebar (admin-nav)
 // is the only navigation surface inside the panel.
-export default function AdminHeader() {
+export default function AdminHeader({ menuOpen = false, onToggleMenu }) {
   const { user, settings } = useAuth();
   const { theme, toggle } = useTheme('admin');
   const [zone, setZone] = useState(() => {
@@ -28,6 +28,17 @@ export default function AdminHeader() {
   return (
     <header className="site-header admin-header">
       <div className="header-inner">
+        <button
+          type="button"
+          className="admin-menu-toggle"
+          onClick={onToggleMenu}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
+        </button>
         <Link to="/spballiancehubadministrator2026" className="brand" aria-label="SPB Alliance Command Center">
           {settings?.logo ? (
             <img src={settings.logo} alt="" className="brand-logo" />

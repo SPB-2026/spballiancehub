@@ -16,6 +16,7 @@ import GiftCodes from './pages/GiftCodes.jsx';
 import PolicyPage from './pages/Policy.jsx';
 import NotFound from './pages/NotFound.jsx';
 import AccessGate from './pages/AccessGate.jsx';
+import Resources from './pages/Resources.jsx';
 
 import MemberLayout from './layouts/MemberLayout.jsx';
 import AdminLayout from './admin/AdminLayout.jsx';
@@ -28,6 +29,7 @@ import AdminGifts from './admin/AdminGifts.jsx';
 import AdminAdmins from './admin/AdminAdmins.jsx';
 import AdminActivity from './admin/AdminActivity.jsx';
 import AdminAccessLog from './admin/AdminAccessLog.jsx';
+import AdminResources from './admin/AdminResources.jsx';
 import AdminHome from './admin/AdminHome.jsx';
 import AdminAnnouncements from './admin/AdminAnnouncements.jsx';
 import AdminMedia from './admin/AdminMedia.jsx';
@@ -147,6 +149,7 @@ export default function App() {
           <Route path="/tips/:id" element={<TipArticle />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/gift-codes" element={<GiftCodes />} />
+          <Route path="/resources" element={<Resources />} />
           <Route path="/privacy" element={<PolicyPage which="privacy" />} />
           <Route path="/terms" element={<PolicyPage which="terms" />} />
           <Route path="/community-guidelines" element={<PolicyPage which="guidelines" />} />
@@ -177,6 +180,7 @@ export default function App() {
         <Route path="/spballiancehubadministrator2026/admins" element={<AdminAdmins />} />
         <Route path="/spballiancehubadministrator2026/activity" element={<AdminActivity />} />
         <Route path="/spballiancehubadministrator2026/access-log" element={<AdminAccessLog />} />
+        <Route path="/spballiancehubadministrator2026/resources" element={<AdminResources />} />
         <Route path="/spballiancehubadministrator2026/profile" element={<AdminProfile />} />
       </Route>
 

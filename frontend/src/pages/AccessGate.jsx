@@ -1,32 +1,33 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import Emblem from '../components/Emblem.jsx';
 import { Button } from '../components/ui.jsx';
 import { useAuth } from '../hooks/useAuth.jsx';
 
 // Shown instead of the whole site until a visitor is verified. Two states:
-//  - arrived via /enter/:token → show the one-time Game ID form
-//  - arrived any other way (no token) → show a plain locked message, with
-//    nothing to type or guess at
+//  - arrived via /enter/:token → the one-time Governor ID form
+//  - arrived any other way (no token) → a plain "private" message that
+//    points back to the access link
+// A visitor who is already verified never sees either: opening the access
+// link again simply takes them straight in.
 export default function AccessGate() {
   const { token } = useParams();
-  const { verifyMember } = useAuth();
-  const [gameId, setGameId] = useState('');
+  const { verifyMember, memberVerified } = useAuth();
+  const [governorId, setGovernorId] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  if (memberVerified) return <Navigate to="/" replace />;
 
   async function onSubmit(e) {
     e.preventDefault();
     setError('');
     setBusy(true);
     try {
-      await verifyMember(gameId.trim(), token);
-      // Drop the token from the URL and let the app re-render as verified.
-      window.history.replaceState(null, '', '/');
-      window.location.reload();
+      // On success the verified state flips and the redirect above takes over.
+      await verifyMember(governorId.trim(), token);
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
-    } finally {
       setBusy(false);
     }
   }
@@ -38,19 +39,20 @@ export default function AccessGate() {
 
         {token ? (
           <>
-            <h1 className="mt-2" style={{ fontSize: 28 }}>Enter your Game ID</h1>
+            <h1 className="mt-2" style={{ fontSize: 28 }}>Enter your Governor ID</h1>
             <p style={{ color: 'var(--text-2)', margin: '10px 0 22px' }}>
-              One-time check — this unlocks the alliance hub on this device going forward.
+              One quick check. After this, the site remembers you on this device.
             </p>
             <form onSubmit={onSubmit}>
               <input
                 className="input"
-                style={{ textAlign: 'center', fontSize: 18, letterSpacing: '0.04em' }}
-                placeholder="9-digit Game User ID"
+                style={{ textAlign: 'center', fontSize: 20, letterSpacing: '0.04em' }}
+                placeholder="9-digit Governor ID"
+                aria-label="Governor ID"
                 inputMode="numeric"
                 maxLength={9}
-                value={gameId}
-                onChange={(e) => setGameId(e.target.value.replace(/\D/g, ''))}
+                value={governorId}
+                onChange={(e) => setGovernorId(e.target.value.replace(/\D/g, ''))}
                 autoFocus
               />
               {error ? <p style={{ color: 'var(--red)', marginTop: 10, fontSize: 13.5 }}>{error}</p> : null}
@@ -63,7 +65,8 @@ export default function AccessGate() {
           <>
             <h1 className="mt-2" style={{ fontSize: 28 }}>This alliance hub is private</h1>
             <p style={{ color: 'var(--text-2)', margin: '10px 0 0' }}>
-              Ask your alliance for access.
+              Open the access link your alliance leader shared in the alliance chat.
+              If you've used it before, opening it again takes you straight in.
             </p>
           </>
         )}
